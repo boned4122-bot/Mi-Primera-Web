@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoElite - Chatbot & Showroom Inteligente</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (para iconos limpios y modernos) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar para una UI premium */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-amber-500 text-slate-950 rounded-xl font-black tracking-wider text-xl shadow-lg shadow-amber-500/20">
+                    <i data-lucide="bike" class="w-6 h-6 inline-block -mt-1"></i> MOTOELITE
+                </div>
+                <span class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full font-medium border border-slate-700 hidden sm:inline-block">Showroom & AI Hub</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="flex h-3 w-3 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs text-slate-400 font-medium">Asesor Virtual Activo</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-4rem)]">
+        
+        <!-- Left Side: Interactive Chatbot (Cols: 5) -->
+        <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
+            <!-- Bot Header -->
+            <div class="p-4 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
+                    <i data-lucide="bot" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-100 flex items-center gap-1.5">
+                        RiderBot <span class="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">Vendedor Pro</span>
+                    </h2>
+                    <p class="text-xs text-slate-400">Pregúntame sobre modelos, precios y créditos</p>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 space-y-reverse flex flex-col-reverse">
+                <!-- Messages will be injected here dynamically in reverse order for easy auto-scroll -->
+                <div id="typing-indicator" class="hidden flex gap-3 items-end max-w-[85%] self-start">
+                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="bg-slate-800 text-slate-300 px-4 py-3 rounded-2xl rounded-bl-none shadow-md flex items-center gap-1">
+                        <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
+                        <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                        <span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pre-defined Quick Actions / Prompts -->
+            <div class="p-2 border-t border-slate-800/60 bg-slate-900/50 flex gap-2 overflow-x-auto whitespace-nowrap">
+                <button onclick="sendQuickMessage('¿Qué motos clásicas tienen disponibles?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-full border border-slate-700/80 transition-all flex items-center gap-1">
+                    📜 Clásicas/Vintage
+                </button>
+                <button onclick="sendQuickMessage('¿Tienen motos eléctricas ecológicas?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-full border border-slate-700/80 transition-all flex items-center gap-1">
+                    🌱 Motos Eléctricas
+                </button>
+                <button onclick="sendQuickMessage('¿Cuáles son los modelos más nuevos 2025/2026?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-full border border-slate-700/80 transition-all flex items-center gap-1">
+                    ⚡ Modelos Nuevos
+                </button>
+                <button onclick="sendQuickMessage('¿Cómo puedo financiar una moto con ustedes?')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-full border border-slate-700/80 transition-all flex items-center gap-1">
+                    💰 Planes de Crédito
+                </button>
+            </div>
+
+            <!-- Message Input Area -->
+            <div class="p-3 border-t border-slate-800 bg-slate-950">
+                <form id="chat-form" class="flex gap-2" onsubmit="handleChatSubmit(event)">
+                    <input 
+                        type="text" 
+                        id="user-input" 
+                        placeholder="Escribe tu mensaje aquí..." 
+                        class="flex-1 bg-slate-900 text-slate-100 placeholder-slate-500 px-4 py-3 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500/80 text-sm transition-all"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 p-3 rounded-xl font-bold transition-all flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/10"
+                    >
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Right Side: Showroom Tabs & Interactive tools (Cols: 7) -->
+        <section class="lg:col-span-7 flex flex-col gap-4 overflow-hidden h-full">
+            
+            <!-- Navigation Tabs -->
+            <div class="bg-slate-900 border border-slate-800 p-1.5 rounded-2xl flex gap-1 shrink-0">
+                <button onclick="switchTab('catalog')" id="tab-catalog" class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-amber-500 text-slate-950 shadow-md">
+                    <i data-lucide="bike" class="w-4 h-4"></i> Catálogo
+                </button>
+                <button onclick="switchTab('simulator')" id="tab-simulator" class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50">
+                    <i data-lucide="calculator" class="w-4 h-4"></i> Crédito
+                </button>
+                <button onclick="switchTab('soundroom')" id="tab-soundroom" class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50">
+                    <i data-lucide="volume-2" class="w-4 h-4"></i> Simulador de Motor
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i> Descubrir ideal
+                </button>
+            </div>
+
+            <!-- Content Container -->
+            <div class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-y-auto p-4 md:p-6 shadow-xl relative">
+                
+                <!-- Tab: Catalog -->
+                <div id="panel-catalog" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Nuestra Colección Expandida</h3>
+                            <p class="text-xs text-slate-400 mt-1">Explora entre modelos modernos de última generación, leyendas clásicas y opciones 100% eléctricas.</p>
+                        </div>
+                        
+                        <!-- Catalog Filter -->
+                        <div class="flex gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800/80 self-start">
+                            <button onclick="filterCatalog('all')" id="btn-filter-all" class="px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 transition-all">Todas</button>
+                            <button onclick="filterCatalog('modern')" id="btn-filter-modern" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Modernas</button>
+                            <button onclick="filterCatalog('vintage')" id="btn-filter-vintage" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Clásicas</button>
+                            <button onclick="filterCatalog('electric')" id="btn-filter-electric" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">Eléctricas</button>
+                        </div>
+                    </div>
+
+                    <!-- Motorcycle Grid -->
+                    <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dynamic Motorcycle Cards -->
+                    </div>
+                </div>
+
+                <!-- Tab: Simulator -->
+                <div id="panel-simulator" class="hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Simulador de Financiamiento</h3>
+                        <p class="text-xs text-slate-400 mt-1">Calcula instantáneamente las cuotas mensuales para tu modelo favorito.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-950 p-5 rounded-2xl border border-slate-800">
+                        <!-- Left inputs -->
+                        <div class="md:col-span-7 space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Selecciona tu Motocicleta</label>
+                                <select id="sim-bike-select" onchange="updateSimulatorFromSelect()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-amber-500 text-white">
+                                    <!-- Dynamic options -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">Plazo de Financiamiento</label>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button onclick="setSimTerm(12)" id="term-12" class="py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all">12 meses</button>
+                                    <button onclick="setSimTerm(24)" id="term-24" class="py-2 rounded-xl text-xs font-semibold bg-amber-500 text-slate-950 font-bold transition-all">24 meses</button>
+                                    <button onclick="setSimTerm(36)" id="term-36" class="py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all">36 meses</button>
+                                    <button onclick="setSimTerm(48)" id="term-48" class="py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all">48 meses</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wide">Porcentaje de Enganche (Inicial)</label>
+                                    <span id="sim-downpayment-percent-text" class="text-sm font-bold text-amber-400">20%</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="sim-downpayment-slider" 
+                                    min="10" 
+                                    max="80" 
+                                    step="5" 
+                                    value="20" 
+                                    oninput="calculateFinancing()" 
+                                    class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                >
+                                <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                                    <span>Mínimo (10%)</span>
+                                    <span>Máximo (80%)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Summary Card -->
+                        <div class="md:col-span-5 bg-gradient-to-b from-slate-900 to-slate-950 p-4 rounded-xl border border-slate-800/80 flex flex-col justify-between space-y-4">
+                            <div class="text-center pb-3 border-b border-slate-800/60">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Cuota Mensual Estimada</span>
+                                <span id="sim-result-monthly" class="text-3xl font-extrabold text-amber-500 block mt-1">$0.00</span>
+                            </div>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Precio de Lista:</span>
+                                    <span id="sim-result-price" class="font-semibold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Enganche Inicial:</span>
+                                    <span id="sim-result-downpayment" class="font-semibold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Monto a Financiar:</span>
+                                    <span id="sim-result-financed" class="font-semibold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-400">Tasa de Interés:</span>
+                                    <span class="font-semibold text-emerald-400">14.5% anual</span>
+                                </div>
+                            </div>
+
+                            <button onclick="requestQuoteFromBot()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10">
+                                <i data-lucide="message-square-plus" class="w-4 h-4"></i> Enviar cotización al Chat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Soundroom (Interactive Engine Sound) -->
+                <div id="panel-soundroom" class="hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Simulador de Rugido de Motor</h3>
+                        <p class="text-xs text-slate-400 mt-1">Siente la potencia. Elige una moto, "enciende" su motor y mantén presionado el botón para acelerar en tiempo real.</p>
+                    </div>
+
+                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-6">
+                        <div class="w-full max-w-md">
+                            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase text-center">Selecciona la Moto a Encender</label>
+                            <select id="sound-bike-select" onchange="changeSoundBike()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white text-center">
+                                <option value="twin">Yamaha R3 (Bicilíndrico Deportivo)</option>
+                                <option value="four">Triumph T120 (Bicilíndrico Clásico de Alto Par)</option>
+                                <option value="single">KTM 390 Duke (Monocilíndrico Vibrante)</option>
+                                <option value="electric">Super Soco TC Max (Silbido Eléctrico del Futuro)</option>
+                            </select>
+                        </div>
+
+                        <!-- Motorcycle Ignition Dashboard -->
+                        <div class="flex flex-col items-center gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800/80 w-full max-w-sm shadow-inner relative">
+                            <!-- Status Indicators -->
+                            <div class="flex justify-between w-full text-xs">
+                                <span class="text-slate-400">ESTADO: <b id="engine-status" class="text-rose-500">APAGADO</b></span>
+                                <span class="text-slate-400">RPM: <b id="engine-rpm" class="text-slate-300">0</b></span>
+                            </div>
+
+                            <!-- Interactive Tachometer Graph -->
+                            <div class="w-full bg-slate-950 h-16 rounded-lg border border-slate-850 overflow-hidden relative flex items-end">
+                                <div id="rpm-bar" class="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 h-full w-0 transition-all duration-75"></div>
+                                <div class="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-slate-600">MOTOELITE AUDIO ENGINE v1.0</div>
+                            </div>
+
+                            <div class="flex gap-4 w-full justify-center">
+                                <!-- Ignition Key Button -->
+                                <button id="btn-ignition" onclick="toggleIgnition()" class="p-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-red-500 rounded-full border border-slate-700 transition-all shadow-md flex items-center justify-center">
+                                    <i data-lucide="power" class="w-6 h-6"></i>
+                                </button>
+
+                                <!-- Acceleration Throttle Pedal / Button -->
+                                <button 
+                                    id="btn-throttle"
+                                    onmousedown="startThrottle()" 
+                                    onmouseup="stopThrottle()" 
+                                    onmouseleave="stopThrottle()"
+                                    ontouchstart="startThrottle(event)" 
+                                    ontouchend="stopThrottle(event)"
+                                    class="flex-1 py-3 px-6 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-slate-950 font-black rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10" 
+                                    disabled
+                                >
+                                    <i data-lucide="gauge" class="w-5 h-5"></i> ¡MANTÉN PARA ACELERAR!
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-500 text-center mt-2">Para una mejor experiencia de sonido, utiliza auriculares o sube el volumen.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Ideal Bike Quiz -->
+                <div id="panel-quiz" class="hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Encuentra tu Moto Ideal</h3>
+                        <p class="text-xs text-slate-400 mt-1">Responde 3 preguntas sencillas y descubriremos cuál es la motocicleta ideal para tu estilo de vida.</p>
+                    </div>
+
+                    <!-- Quiz Area Container -->
+                    <div id="quiz-container" class="bg-slate-950 p-6 rounded-2xl border border-slate-800 min-h-[250px] flex flex-col justify-between">
+                        <!-- Questions/Intro will be injected here -->
+                        <div id="quiz-content" class="space-y-4">
+                            <div class="text-center py-6">
+                                <i data-lucide="sparkles" class="w-12 h-12 text-amber-500 mx-auto mb-4 animate-pulse"></i>
+                                <h4 class="text-lg font-bold text-white">¿Estás listo para descubrir tu estilo?</h4>
+                                <p class="text-sm text-slate-400 mt-2 max-w-sm mx-auto">Te ayudaremos a seleccionar de forma lúdica la cilindrada, diseño y modelo de tus sueños.</p>
+                                <button onclick="startQuiz()" class="mt-6 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-sm transition-all shadow-md">
+                                    Comenzar Quiz de Estilo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>&copy; 2026 MotoElite Co. Todos los derechos reservados.</p>
+            <p class="flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4 text-amber-500"></i> Simulación interactiva para entretenimiento y ventas de motocicletas.</p>
+        </div>
+    </footer>
+
+    <!-- Script Principal -->
+    <script>
+        // Configuración de la API de Gemini (Viene del entorno de ejecución)
+        const apiKey = ""; 
+
+        // Base de Datos de Motocicletas Ampliada (10 Modelos)
+        const motorcycles = [
+            {
+                id: "yamaha-r3",
+                name: "Yamaha YZF-R3",
+                year: "2025",
+                type: "modern",
+                category: "Deportiva",
+                price: 6500,
+                engine: "321 cc Bicilíndrico",
+                power: "42 HP",
+                image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=600",
+                desc: "La reina de la cilindrada media deportiva. Ágil, veloz y perfecta para ciudad y pista.",
+                badge: "Más Vendida",
+                colors: ["#2563eb", "#000000", "#dc2626"] // Azul, Negro, Rojo
+            },
+            {
+                id: "honda-cb500x",
+                name: "Honda CB500X",
+                year: "2025",
+                type: "modern",
+                category: "Adventure / Trail",
+                price: 7200,
+                engine: "471 cc Bicilíndrico",
+                power: "47 HP",
+                image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&q=80&w=600",
+                desc: "Lista para cualquier aventura de corta o larga distancia. Comodidad y durabilidad garantizadas.",
+                badge: "Recomendada",
+                colors: ["#dc2626", "#475569", "#ffffff"]
+            },
+            {
+                id: "duke-390",
+                name: "KTM 390 Duke",
+                year: "2025",
+                type: "modern",
+                category: "Naked",
+                price: 5900,
+                engine: "373 cc Monocilíndrico",
+                power: "44 HP",
+                image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=600",
+                desc: "El 'bisturí' urbano. Potencia salvaje en un chasis ultraligero para los amantes de las curvas.",
+                badge: "Agresiva",
+                colors: ["#f97316", "#000000"]
+            },
+            {
+                id: "ninja-400",
+                name: "Kawasaki Ninja 400",
+                year: "2025",
+                type: "modern",
+                category: "Super Deportiva",
+                price: 5800,
+                engine: "399 cc Bicilíndrico",
+                power: "49 HP",
+                image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=600",
+                desc: "Rendimiento líder en su clase con un diseño aerodinámico agresivo Ninja.",
+                badge: "Veloz",
+                colors: ["#22c55e", "#000000"]
+            },
+            {
+                id: "royal-enfield-350",
+                name: "Royal Enfield Classic 350",
+                year: "2024",
+                type: "vintage",
+                category: "Retro / Neo-Clásica",
+                price: 4800,
+                engine: "349 cc Monocilíndrico",
+                power: "20.2 HP",
+                image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&q=80&w=600",
+                desc: "Estilo retro militar puro. Disfruta del característico sonido del motor a bajas revoluciones.",
+                badge: "Clásica Moderna",
+                colors: ["#16a34a", "#4b5563", "#d97706"]
+            },
+            {
+                id: "triumph-bonneville",
+                name: "Triumph Bonneville T120",
+                year: "2023",
+                type: "vintage",
+                category: "Clásica Atemporal",
+                price: 12500,
+                engine: "1200 cc Bicilíndrico",
+                power: "80 HP",
+                image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600",
+                desc: "La elegancia británica definitiva. Un motor de par masivo combinado con acabados premium hechos a mano.",
+                badge: "Premium",
+                colors: ["#000000", "#1e3a8a", "#991b1b"]
+            },
+            {
+                id: "vespa-px150",
+                name: "Vespa PX 150 (Restaurada)",
+                year: "1982",
+                type: "vintage",
+                category: "Scooter Clásica",
+                price: 3500,
+                engine: "150 cc Monocilíndrico de 2T",
+                power: "9 HP",
+                image: "https://images.unsplash.com/photo-1508898578281-774ac4893c0c?auto=format&fit=crop&q=80&w=600",
+                desc: "Una joya italiana restaurada a estado de fábrica con piezas originales de 1982. Cambios en el puño.",
+                badge: "Colección",
+                colors: ["#ffffff", "#06b6d4", "#f43f5e"]
+            },
+            {
+                id: "honda-cb750",
+                name: "Honda CB750 Four",
+                year: "1979",
+                type: "vintage",
+                category: "Superbike Retro",
+                price: 4500,
+                engine: "736 cc Tetracilíndrico",
+                power: "67 HP",
+                image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=600",
+                desc: "La motocicleta que cambió el mundo. Restaurada meticulosamente con su escape cromado icónico de cuatro salidas.",
+                badge: "Leyenda",
+                colors: ["#b91c1c", "#1e293b"]
+            },
+            {
+                id: "super-soco-tc",
+                name: "Super Soco TC Max",
+                year: "2026",
+                type: "electric",
+                category: "Cafe Racer Eléctrica",
+                price: 5200,
+                engine: "Motor Central de 5000W",
+                power: "6.8 HP Eq.",
+                image: "https://images.unsplash.com/photo-1508898578281-774ac4893c0c?auto=format&fit=crop&q=80&w=600",
+                desc: "Cafe racer moderna 100% eléctrica. Sin emisiones, sin ruidos, conectividad total y hasta 110 km de autonomía.",
+                badge: "Ecológica",
+                colors: ["#3f3f46", "#1e3a8a"]
+            },
+            {
+                id: "bmw-r80",
+                name: "BMW R80 G/S (Retro Adventure)",
+                year: "1988",
+                type: "vintage",
+                category: "Dual Sport Legend",
+                price: 8900,
+                engine: "797 cc Boxer Twin",
+                power: "50 HP",
+                image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&q=80&w=600",
+                desc: "La creadora de la categoría Adventure. Motor Boxer confiable, suspensiones preparadas y estampa icónica del Dakar.",
+                badge: "Colección",
+                colors: ["#ffffff", "#2563eb"]
+            }
+        ];
+
+        // Estado de la App
+        let currentTab = 'catalog';
+        let currentFilter = 'all';
+        let selectedBikeForSim = motorcycles[0];
+        let simTerm = 24;
+
+        // Estado del Audio (Web Audio API Engine)
+        let audioCtx = null;
+        let mainOscillator = null;
+        let subOscillator = null;
+        let mainGain = null;
+        let isEngineRunning = false;
+        let engineInterval = null;
+        let currentRPM = 0;
+        let activeSoundType = "twin"; // 'twin', 'four', 'single', 'electric'
+
+        // Reglas de Respuestas Offline del Chatbot
+        const offlineRules = [
+            {
+                keywords: ["clasic", "antigu", "retro", "vintage", "vieja", "pasado", "antigua", "enfield", "vespa", "triumph", "cb750", "bmw"],
+                response: "¡Nuestra especialidad son las leyendas de dos ruedas! 📜 En clásicas disponemos de la bella **Royal Enfield Classic 350** ($4,800), la imponente **Triumph Bonneville T120** ($12,500), la legendaria **Honda CB750** ($4,500) y la icónica viajera del desierto **BMW R80 G/S de 1988** ($8,900). Todas con garantía de restauración mecánica completa."
+            },
+            {
+                keywords: ["electric", "ecolog", "eco", "bateria", "soco", "enchufe", "sostenible"],
+                response: "¡Lideramos el camino hacia la movilidad sostenible! 🌱 Nuestra **Super Soco TC Max** ($5,200) es una cafe racer 100% eléctrica con motor central de 5000W, batería extraíble, autonomía de hasta 110 km y una aceleración silenciosa y veloz ideal para el día a día sin gasolina."
+            },
+            {
+                keywords: ["nuev", "modern", "actual", "2025", "2026", "tecnolog", "yamaha", "honda", "ktm", "deportiv", "naked", "ninja"],
+                response: "¡Para los amantes de la tecnología y velocidad! ⚡ Tenemos en showroom la agresiva **Yamaha YZF-R3 2025** ($6,500), la polivalente **Honda CB500X 2025** ($7,200), el juguete urbano **KTM 390 Duke 2025** ($5,900) y la veloz **Kawasaki Ninja 400** ($5,800). ¿Cuál te gusta más?"
+            },
+            {
+                keywords: ["credit", "financ", "pago", "cuota", "mensual", "interes", "enganche", "plazo", "banco", "comprar"],
+                response: "Te ofrecemos excelentes facilidades de pago: 💸\n1. **Crédito Directo MotoElite**: Desde 10% de enganche y plazos de 12 a 48 meses (Tasa preferente del 14.5% anual).\n2. **Tarjeta de Crédito**: Hasta 24 meses sin intereses con tarjetas aliadas.\n3. **Plan Canje**: Tomamos tu motocicleta usada a cuenta.\nPuedes calcular tu cuota exacta en la pestaña **'Crédito'** de la derecha."
+            },
+            {
+                keywords: ["ofert", "promocion", "descuent", "bono", "regalo", "gratis", "barato"],
+                response: "¡Estás de enhorabuena! 🔥 Contamos con promociones geniales:\n- **Bono de Bienvenida Rider**: Recibe $500 USD de descuento inmediato.\n- **Kit de Seguridad Gratis**: Casco homologado DOT + guantes de protección.\n- **0% de Interés a 12 meses** en la Yamaha YZF-R3.\nAprovecha estas ventajas hoy."
+            },
+            {
+                keywords: ["precio", "cuanto cuest", "valor", "costo", "tarifa"],
+                response: "Aquí tienes los precios base en USD de nuestro catálogo:\n- Vespa PX 150: $3,500\n- Honda CB750 (1979): $4,500\n- Royal Enfield 350: $4,800\n- Super Soco TC Max (Eléctrica): $5,200\n- Kawasaki Ninja 400: $5,800\n- KTM 390 Duke: $5,900\n- Yamaha YZF-R3: $6,500\n- Honda CB500X: $7,200\n- BMW R80 (1988): $8,900\n- Triumph Bonneville T120: $12,500"
+            },
+            {
+                keywords: ["hola", "buenas", "buen dia", "saludos", "que tal", "start", "empezar"],
+                response: "¡Hola! Bienvenido a **MotoElite**. 🏍️ Soy RiderBot, tu asesor comercial experto. Te puedo ayudar a encontrar tu modelo soñado (moderno, clásico o eléctrico), calcular financiamientos o escuchar su sonido de motor. ¿Qué moto te gustaría explorar hoy?"
+            }
+        ];
+
+        // Inicialización al cargar el DOM
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderCatalog();
+            populateSimulatorOptions();
+            calculateFinancing();
+            
+            // Mensaje inicial del bot
+            addBotMessage("¡Hola, entusiasta del motociclismo! 🏍️ Bienvenido a **MotoElite**.\n\n¿Buscas una moto moderna para moverte, una clásica legendaria, o quieres probar una silenciosa y ecológica opción eléctrica? Pregúntame lo que quieras o selecciona una de las opciones rápidas abajo.", false);
+        });
+
+        // Cambio de pestañas en el Showroom
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            // Actualizar botones de pestaña
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.className = "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50";
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.className = "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-amber-500 text-slate-950 shadow-md";
+
+            // Mostrar/Ocultar paneles correspondientes
+            document.getElementById('panel-catalog').classList.add('hidden');
+            document.getElementById('panel-simulator').classList.add('hidden');
+            document.getElementById('panel-soundroom').classList.add('hidden');
+            document.getElementById('panel-quiz').classList.add('hidden');
+            
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+
+            // Detener sonido si cambia de pestaña por cortesía de volumen
+            if (tabId !== 'soundroom') {
+                stopEngine();
+            }
+        }
+
+        // Renderizado dinámico del Catálogo
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
+            grid.innerHTML = '';
+
+            const filteredMotos = motorcycles.filter(moto => {
+                if (currentFilter === 'all') return true;
+                return moto.type === currentFilter;
+            });
+
+            filteredMotos.forEach(moto => {
+                const colorsHTML = moto.colors ? moto.colors.map(color => `
+                    <span class="w-3.5 h-3.5 rounded-full border border-slate-800 inline-block shadow" style="background-color: ${color}"></span>
+                `).join('') : '';
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden hover:border-amber-500/50 transition-all group duration-300 flex flex-col";
+                card.innerHTML = `
+                    <div class="h-44 overflow-hidden relative bg-slate-900">
+                        <img 
+                            src="${moto.image}" 
+                            alt="${moto.name}" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onerror="this.src='https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=600'"
+                        >
+                        <span class="absolute top-2 left-2 bg-amber-500 text-slate-950 font-extrabold text-[10px] px-2 py-0.5 rounded-md uppercase tracking-wider shadow-md">
+                            ${moto.badge}
+                        </span>
+                        <span class="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-md text-slate-200 text-xs px-2 py-1 rounded-md font-semibold border border-slate-800">
+                            Año: ${moto.year}
+                        </span>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start gap-1">
+                                <h4 class="font-bold text-white group-hover:text-amber-400 transition-colors">${moto.name}</h4>
+                                <span class="text-amber-500 font-extrabold text-base whitespace-nowrap">$${moto.price.toLocaleString('en-US')} USD</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-medium mt-1 mb-2 uppercase">${moto.category} • ${moto.engine}</p>
+                            <p class="text-xs text-slate-300 leading-relaxed line-clamp-2">${moto.desc}</p>
+                            
+                            <!-- Color Swatch -->
+                            <div class="flex items-center gap-1.5 mt-3">
+                                <span class="text-[10px] text-slate-500 font-bold uppercase">Personalizar Color:</span>
+                                <div class="flex gap-1">${colorsHTML}</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-900 grid grid-cols-2 gap-2">
+                            <button onclick="askBotAboutMotorcycle('${moto.id}')" class="py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold border border-slate-800 transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5 text-amber-500"></i> Consultar
+                            </button>
+                            <button onclick="selectForSimulator('${moto.id}')" class="py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md">
+                                <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Financiar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Filtro del catálogo
+        function filterCatalog(type) {
+            currentFilter = type;
+            document.querySelectorAll('[id^="btn-filter-"]').forEach(btn => {
+                btn.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all";
+            });
+            const activeBtn = document.getElementById(`btn-filter-${type}`);
+            activeBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 transition-all";
+            renderCatalog();
+        }
+
+        // Rellenar las opciones de la moto en el simulador
+        function populateSimulatorOptions() {
+            const select = document.getElementById('sim-bike-select');
+            select.innerHTML = '';
+            motorcycles.forEach(moto => {
+                const opt = document.createElement('option');
+                opt.value = moto.id;
+                opt.textContent = `${moto.name} ($${moto.price.toLocaleString('en-US')} USD)`;
+                select.appendChild(opt);
+            });
+        }
+
+        // Seleccionar moto desde catálogo y mandarla al simulador
+        function selectForSimulator(bikeId) {
+            const selected = motorcycles.find(m => m.id === bikeId);
+            if (selected) {
+                selectedBikeForSim = selected;
+                document.getElementById('sim-bike-select').value = bikeId;
+                switchTab('simulator');
+                calculateFinancing();
+            }
+        }
+
+        // Actualizar simulador cuando cambia el select
+        function updateSimulatorFromSelect() {
+            const selectVal = document.getElementById('sim-bike-select').value;
+            const selected = motorcycles.find(m => m.id === selectVal);
+            if (selected) {
+                selectedBikeForSim = selected;
+                calculateFinancing();
+            }
+        }
+
+        // Configurar los meses del plazo
+        function setSimTerm(months) {
+            simTerm = months;
+            document.querySelectorAll('[id^="term-"]').forEach(btn => {
+                btn.className = "py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition-all";
+            });
+            const activeBtn = document.getElementById(`term-${months}`);
+            activeBtn.className = "py-2 rounded-xl text-xs font-semibold bg-amber-500 text-slate-950 font-bold transition-all";
+            calculateFinancing();
+        }
+
+        // Realizar cálculos financieros del simulador
+        function calculateFinancing() {
+            const downpaymentPercent = parseInt(document.getElementById('sim-downpayment-slider').value);
+            document.getElementById('sim-downpayment-percent-text').textContent = `${downpaymentPercent}%`;
+
+            const price = selectedBikeForSim.price;
+            const downpayment = (price * downpaymentPercent) / 100;
+            const financedAmount = price - downpayment;
+            
+            const annualRate = 0.145;
+            const monthlyRate = annualRate / 12;
+            const monthlyPayment = (financedAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -simTerm));
+
+            document.getElementById('sim-result-monthly').textContent = `$${monthlyPayment.toFixed(2)} USD`;
+            document.getElementById('sim-result-price').textContent = `$${price.toLocaleString('en-US')} USD`;
+            document.getElementById('sim-result-downpayment').textContent = `$${downpayment.toLocaleString('en-US')} USD`;
+            document.getElementById('sim-result-financed').textContent = `$${financedAmount.toLocaleString('en-US')} USD`;
+        }
+
+        // Mandar los datos de la cotización actual directamente al chat
+        function requestQuoteFromBot() {
+            const text = `Hola, me gustaría recibir una propuesta formal de financiamiento para la **${selectedBikeForSim.name}** con un **${document.getElementById('sim-downpayment-slider').value}% de enganche** a un plazo de **${simTerm} meses**`;
+            sendQuickMessage(text);
+        }
+
+        // Consultar moto desde catálogo
+        function askBotAboutMotorcycle(bikeId) {
+            const bike = motorcycles.find(m => m.id === bikeId);
+            if (bike) {
+                const text = `Me interesa saber todos los detalles y precio de la **${bike.name} (${bike.year})**`;
+                sendQuickMessage(text);
+            }
+        }
+
+        // UI de agregar burbujas al chat
+        function addBotMessage(text, isUser = false) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            
+            if (isUser) {
+                messageDiv.className = "flex gap-3 items-end max-w-[85%] self-end flex-row-reverse";
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-slate-950 font-bold shrink-0 text-xs">
+                        TÚ
+                    </div>
+                    <div class="bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl rounded-br-none shadow-md text-sm font-medium leading-relaxed whitespace-pre-wrap">
+                        ${text}
+                    </div>
+                `;
+            } else {
+                messageDiv.className = "flex gap-3 items-end max-w-[85%] self-start";
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-amber-500 shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="bg-slate-800 text-slate-200 px-4 py-3 rounded-2xl rounded-bl-none shadow-md text-sm leading-relaxed whitespace-pre-wrap">
+                        ${text}
+                    </div>
+                `;
+            }
+            
+            const indicator = document.getElementById('typing-indicator');
+            messagesContainer.insertBefore(messageDiv, indicator);
+            lucide.createIcons();
+            
+            messagesContainer.scrollTop = 0;
+        }
+
+        // Función para enviar mensaje al Chatbot
+        async function handleChatSubmit(event) {
+            if (event) event.preventDefault();
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            addBotMessage(text, true);
+
+            const indicator = document.getElementById('typing-indicator');
+            indicator.classList.remove('hidden');
+
+            setTimeout(async () => {
+                let botReply = "";
+                
+                if (apiKey && apiKey.trim() !== "") {
+                    botReply = await getGeminiAIResponse(text);
+                } else {
+                    botReply = getOfflineResponse(text);
+                }
+
+                indicator.classList.add('hidden');
+                addBotMessage(botReply, false);
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function sendQuickMessage(text) {
+            document.getElementById('user-input').value = text;
+            handleChatSubmit();
+        }
+
+        function getOfflineResponse(userInput) {
+            const normalized = userInput.toLowerCase();
+            for (const rule of offlineRules) {
+                for (const keyword of rule.keywords) {
+                    if (normalized.includes(keyword)) {
+                        return rule.response;
+                    }
+                }
+            }
+            return "¡Excelente pregunta! Como tu asesor especializado MotoElite, te confirmo que disponemos de un inventario robusto con facilidades de financiación.\n\n¿Quieres que simulemos un plan de crédito para ti o prefieres probar el sonido de aceleración en la pestaña 'Simulador de Motor'?";
+        }
+
+        // WEB AUDIO API - Sintetizador de Motores Interactivo
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function changeSoundBike() {
+            activeSoundType = document.getElementById('sound-bike-select').value;
+            if (isEngineRunning) {
+                stopEngine();
+                startEngine();
+            }
+        }
+
+        function toggleIgnition() {
+            initAudio();
+            const btn = document.getElementById('btn-ignition');
+            const statusText = document.getElementById('engine-status');
+            const throttleBtn = document.getElementById('btn-throttle');
+
+            if (!isEngineRunning) {
+                startEngine();
+                btn.className = "p-4 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 rounded-full border border-emerald-400 transition-all shadow-md flex items-center justify-center animate-pulse";
+                statusText.textContent = "ENCENDIDO";
+                statusText.className = "text-emerald-400 font-bold";
+                throttleBtn.removeAttribute('disabled');
+            } else {
+                stopEngine();
+                btn.className = "p-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-red-500 rounded-full border border-slate-700 transition-all shadow-md flex items-center justify-center";
+                statusText.textContent = "APAGADO";
+                statusText.className = "text-rose-500 font-bold";
+                throttleBtn.setAttribute('disabled', 'true');
+            }
+        }
+
+        function startEngine() {
+            if (isEngineRunning) return;
+            isEngineRunning = true;
+
+            // Configuración de los osciladores según la moto elegida
+            mainOscillator = audioCtx.createOscillator();
+            subOscillator = audioCtx.createOscillator();
+            mainGain = audioCtx.createGain();
+
+            mainOscillator.connect(mainGain);
+            subOscillator.connect(mainGain);
+            mainGain.connect(audioCtx.destination);
+
+            let baseFreq = 50; // RPM bajas en ralentí
+            if (activeSoundType === "twin") {
+                mainOscillator.type = "sawtooth";
+                subOscillator.type = "triangle";
+                baseFreq = 45;
+            } else if (activeSoundType === "four") {
+                mainOscillator.type = "sawtooth";
+                subOscillator.type = "sawtooth";
+                baseFreq = 35;
+            } else if (activeSoundType === "single") {
+                mainOscillator.type = "square";
+                subOscillator.type = "triangle";
+                baseFreq = 55;
+            } else if (activeSoundType === "electric") {
+                mainOscillator.type = "sine";
+                subOscillator.type = "triangle";
+                baseFreq = 80;
+            }
+
+            mainOscillator.frequency.value = baseFreq;
+            subOscillator.frequency.value = baseFreq * 1.5;
+
+            // Volumen muy bajo por seguridad de oído del usuario
+            mainGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+
+            mainOscillator.start();
+            subOscillator.start();
+
+            currentRPM = 1200; // Ralentí estándar
+            updateIgnitionDisplay();
+
+            // Intervalo de ciclo para el ralentí (vibración leve)
+            engineInterval = setInterval(() => {
+                if (!isThrottling) {
+                    const idleVibe = Math.sin(Date.now() * 0.05) * 40;
+                    currentRPM = 1200 + idleVibe;
+                    
+                    let freq = 50;
+                    if (activeSoundType === "twin") freq = 45;
+                    else if (activeSoundType === "four") freq = 35;
+                    else if (activeSoundType === "single") freq = 55;
+                    else if (activeSoundType === "electric") freq = 80;
+
+                    mainOscillator.frequency.value = freq + (idleVibe / 50);
+                    subOscillator.frequency.value = (freq * 1.5) + (idleVibe / 40);
+                    updateIgnitionDisplay();
+                }
+            }, 50);
+        }
+
+        function stopEngine() {
+            if (!isEngineRunning) return;
+            isEngineRunning = false;
+            clearInterval(engineInterval);
+
+            try {
+                mainOscillator.stop();
+                subOscillator.stop();
+            } catch (e) {}
+
+            currentRPM = 0;
+            updateIgnitionDisplay();
+        }
+
+        let isThrottling = false;
+        let throttleInterval = null;
+
+        function startThrottle(e) {
+            if (e) e.preventDefault();
+            if (!isEngineRunning) return;
+            isThrottling = true;
+
+            clearInterval(throttleInterval);
+            throttleInterval = setInterval(() => {
+                if (currentRPM < 8500) {
+                    currentRPM += 350;
+                    
+                    let multiplier = 50;
+                    if (activeSoundType === "twin") multiplier = 45;
+                    else if (activeSoundType === "four") multiplier = 35;
+                    else if (activeSoundType === "single") multiplier = 55;
+                    else if (activeSoundType === "electric") multiplier = 80;
+
+                    // Escalar frecuencia según las RPM
+                    mainOscillator.frequency.value = multiplier + (currentRPM / 15);
+                    subOscillator.frequency.value = (multiplier * 1.5) + (currentRPM / 12);
+                    
+                    // Modificación ligera de ganancia en aceleraciones
+                    mainGain.gain.value = 0.06 + (currentRPM / 120000);
+                }
+                updateIgnitionDisplay();
+            }, 30);
+        }
+
+        function stopThrottle(e) {
+            if (e) e.preventDefault();
+            if (!isEngineRunning) return;
+            isThrottling = false;
+
+            clearInterval(throttleInterval);
+            throttleInterval = setInterval(() => {
+                if (currentRPM > 1200) {
+                    currentRPM -= 400;
+                    if (currentRPM < 1200) currentRPM = 1200;
+
+                    let multiplier = 50;
+                    if (activeSoundType === "twin") multiplier = 45;
+                    else if (activeSoundType === "four") multiplier = 35;
+                    else if (activeSoundType === "single") multiplier = 55;
+                    else if (activeSoundType === "electric") multiplier = 80;
+
+                    mainOscillator.frequency.value = multiplier + (currentRPM / 15);
+                    subOscillator.frequency.value = (multiplier * 1.5) + (currentRPM / 12);
+                    mainGain.gain.value = 0.06;
+                } else {
+                    clearInterval(throttleInterval);
+                }
+                updateIgnitionDisplay();
+            }, 30);
+        }
+
+        function updateIgnitionDisplay() {
+            document.getElementById('engine-rpm').textContent = Math.round(currentRPM);
+            const rpmBar = document.getElementById('rpm-bar');
+            const percent = (currentRPM / 9000) * 100;
+            rpmBar.style.width = `${Math.min(percent, 100)}%`;
+        }
+
+
+        // QUIZ INTERACTIVO DE ESTILO DE MOTOS
+        let quizStep = 0;
+        let quizScores = { modern: 0, vintage: 0, electric: 0 };
+
+        const quizData = [
+            {
+                question: "¿Cuál es tu escenario o ruta ideal para rodar?",
+                options: [
+                    { text: "Autopistas infinitas, paisajes y carretera de fin de semana.", score: "vintage" },
+                    { text: "Curvas rápidas de asfalto urbano, velocidad y tecnología.", score: "modern" },
+                    { text: "Ciudad congestionada de forma limpia, silenciosa y sin emisiones.", score: "electric" }
+                ]
+            },
+            {
+                question: "Al mirar una motocicleta, ¿qué es lo primero que llama tu atención?",
+                options: [
+                    { text: "Sus detalles vintage, faro redondo clásico y acabados retro.", score: "vintage" },
+                    { text: "El chasis expuesto ultra agresivo y paneles aerodinámicos de carreras.", score: "modern" },
+                    { text: "La sencillez futurista, la ausencia de escapes y la ligereza del motor.", score: "electric" }
+                ]
+            },
+            {
+                question: "¿Qué característica técnica consideras más útil?",
+                options: [
+                    { text: "La durabilidad del motor, chasis cómodo e historia legendaria.", score: "vintage" },
+                    { text: "Un panel digital TFT con conectividad, modos de conducción y ABS.", score: "modern" },
+                    { text: "Cero mantenimiento del motor, sin gastar gasolina y cargable en cualquier enchufe.", score: "electric" }
+                ]
+            }
+        ];
+
+        function startQuiz() {
+            quizStep = 0;
+            quizScores = { modern: 0, vintage: 0, electric: 0 };
+            showQuizQuestion();
+        }
+
+        function showQuizQuestion() {
+            const container = document.getElementById('quiz-content');
+            const currentQ = quizData[quizStep];
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-xs text-slate-500 font-bold uppercase tracking-wide">
+                        <span>Pregunta ${quizStep + 1} de 3</span>
+                        <span class="text-amber-500">Quiz de Estilo</span>
+                    </div>
+                    <h4 class="text-base font-bold text-white">${currentQ.question}</h4>
+                    <div class="space-y-2 pt-2">
+                        ${currentQ.options.map((opt, idx) => `
+                            <button onclick="answerQuiz(${idx})" class="w-full text-left p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/60 hover:bg-slate-800/40 text-slate-200 text-xs transition-all flex items-center justify-between group">
+                                <span>${opt.text}</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 group-hover:text-amber-500 transition-colors"></i>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function answerQuiz(optionIdx) {
+            const selectedOpt = quizData[quizStep].options[optionIdx];
+            quizScores[selectedOpt.score]++;
+
+            quizStep++;
+            if (quizStep < quizData.length) {
+                showQuizQuestion();
+            } else {
+                showQuizResults();
+            }
+        }
+
+        function showQuizResults() {
+            let winnerType = "modern";
+            if (quizScores.vintage >= quizScores.modern && quizScores.vintage >= quizScores.electric) {
+                winnerType = "vintage";
+            } else if (quizScores.electric >= quizScores.modern && quizScores.electric >= quizScores.vintage) {
+                winnerType = "electric";
+            }
+
+            // Seleccionar moto recomendada basada en la elección
+            const recommendedBikes = motorcycles.filter(m => m.type === winnerType);
+            const chosenBike = recommendedBikes[Math.floor(Math.random() * recommendedBikes.length)] || motorcycles[0];
+
+            let titleType = "";
+            let descType = "";
+            if (winnerType === "modern") {
+                titleType = "Rider Veloz & Tecnológico ⚡";
+                descType = "Te encanta la velocidad, las curvas cerradas y la tecnología del año actual. Te gusta estar a la vanguardia.";
+            } else if (winnerType === "vintage") {
+                titleType = "Espíritu Libre Clásico 📜";
+                descType = "Aprecias los detalles, la historia de las marcas clásicas, la comodidad del viaje y las motocicletas que cuentan una leyenda.";
+            } else {
+                titleType = "Pionero Ecológico 🌱";
+                descType = "Tu camino es el futuro urbano. Deseas un transporte limpio, de bajo mantenimiento, silencioso y súper eficiente.";
+            }
+
+            const container = document.getElementById('quiz-content');
+            container.innerHTML = `
+                <div class="text-center space-y-4">
+                    <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">¡Resultado del Quiz!</span>
+                    <h4 class="text-xl font-extrabold text-white">${titleType}</h4>
+                    <p class="text-xs text-slate-400 max-w-sm mx-auto">${descType}</p>
+                    
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3 text-left max-w-sm mx-auto mt-4">
+                        <img src="${chosenBike.image}" class="w-16 h-16 object-cover rounded-lg" onerror="this.src='https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=600'">
+                        <div>
+                            <span class="text-[9px] text-amber-500 uppercase font-black tracking-wider block">Moto Recomendada</span>
+                            <h5 class="text-sm font-bold text-white">${chosenBike.name}</h5>
+                            <span class="text-xs font-semibold text-emerald-400">$${chosenBike.price.toLocaleString('en-US')} USD</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 justify-center pt-3 max-w-sm mx-auto">
+                        <button onclick="startQuiz()" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-semibold transition-all">
+                            Repetir Quiz
+                        </button>
+                        <button onclick="sendQuickMessage('Hola, el quiz me recomendó la moto: **${chosenBike.name}**. Me gustaría que hablemos sobre ella y sus planes de crédito.')" class="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition-all shadow-md">
+                            Preguntar al Bot
+                        </button>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // Integración de Gemini API
+        async function getGeminiAIResponse(userPrompt) {
+            const systemPrompt = `
+                Eres "RiderBot", el chatbot vendedor estrella de "MotoElite".
+                Tu objetivo es ser extremadamente persuasivo, servicial y amigable para vender motos de nuestro catálogo.
+                Estamos enfocados en un público joven, dinámico y respetuoso de las normas de tránsito.
+                
+                NUESTRO INVENTARIO (10 Motocicletas):
+                - Modernas:
+                  * Yamaha YZF-R3 (2025): Deportiva, 321cc, 42 HP. Precio: $6,500. Súper ágil.
+                  * Honda CB500X (2025): Adventure, 471cc, 47 HP. Precio: $7,200. Viajes confortables.
+                  * KTM 390 Duke (2025): Naked urbana, 373cc, 44 HP. Precio: $5,900.
+                  * Kawasaki Ninja 400 (2025): Super Deportiva, 399cc, 49 HP. Precio: $5,800.
+                
+                - Clásicas / Vintage (Garantizadas y restauradas):
+                  * Royal Enfield Classic 350 (2024): Retro, 349cc, 20.2 HP. Precio: $4,800.
+                  * Triumph Bonneville T120 (2023): Neo-clásica, 1200cc, 80 HP. Precio: $12,500.
+                  * Vespa PX 150 (1982): Scooter clásico restaurado de 2T. Precio: $3,500.
+                  * Honda CB750 Four (1979): Leyenda tetracilíndrica cromada. Precio: $4,500.
+                  * BMW R80 G/S (1988): Dual Sport de colección dakariana. Precio: $8,900.
+
+                - Eléctricas:
+                  * Super Soco TC Max (2026): Cafe Racer 100% eléctrica, 5000W. Precio: $5,200. Silenciosa, sin emisiones.
+
+                PLANES DE CRÉDITO:
+                - Crédito Directo MotoElite. Enganches desde 10% hasta 80%.
+                - Plazos de 12, 24, 36 y 48 meses. Tasa fija de 14.5% anual.
+                - Recomienda usar la pestaña "Crédito" del showroom para cotizar en tiempo real.
+
+                OFERTAS ACTIVAS:
+                - Bono de Bienvenida Rider: $500 de descuento inmediato en cualquier compra de catálogo.
+                - Kit de Seguridad Gratis: Casco DOT de marca y guantes de protección.
+                - Tasa Cero (0% interés) a 12 meses en la Yamaha YZF-R3.
+
+                REGLAS DE CONVERSACIÓN:
+                1. Sé empático, dinámico y responde siempre en español.
+                2. Invítalos a probar el "Simulador de Motor" para escuchar el encendido de los motores o tomar el "Quiz de Estilo" interactivo en la barra superior derecha.
+                3. Promueve siempre el uso de cascos y la seguridad vial como prioridades fundamentales de MotoElite.
+                4. Divide la información con emojis y párrafos cortos para facilitar la lectura en teléfonos móviles.
+            `;
+
+            let retries = 5;
+            let delay = 1000;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            while (retries > 0) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP Status ${response.status}`);
+                    
+                    const data = await response.json();
+                    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (reply) return reply;
+                    
+                    throw new Error("Formato inválido.");
+                } catch (error) {
+                    retries--;
+                    if (retries === 0) {
+                        return getOfflineResponse(userPrompt);
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

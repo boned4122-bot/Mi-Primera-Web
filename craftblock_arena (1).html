@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CraftBlock Arena - Roblox & Minecraft Simulator</title>
+    <!-- Tailwind CSS para una interfaz moderna y premium -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js para renderizado de gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0e12;
+        }
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        /* Ocultar scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        /* Efecto de mira en el centro */
+        .reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .reticle::before, .reticle::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.85);
+        }
+        .reticle::before {
+            top: 6px; left: 0; width: 14px; height: 2px;
+        }
+        .reticle::after {
+            top: 0; left: 6px; width: 2px; height: 14px;
+        }
+        /* Joystick virtual para móviles */
+        #joystickContainer {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            touch-action: none;
+            display: none;
+            z-index: 20;
+        }
+        #joystickNipple {
+            position: absolute;
+            top: 35px;
+            left: 35px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border-radius: 50%;
+            transition: transform 0.05s ease;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative select-none">
+
+    <!-- Canvas de Juego 3D -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Retícula / Mira central -->
+    <div id="reticle" class="reticle hidden"></div>
+
+    <!-- PANTALLA DE INICIO / MENÚ PRINCIPAL -->
+    <div id="mainMenu" class="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center z-50 p-6 text-white transition-opacity duration-500">
+        <div class="max-w-4xl w-full bg-slate-900/60 border border-slate-700/50 backdrop-blur-md rounded-2xl p-8 shadow-2xl text-center flex flex-col md:flex-row gap-8 items-center">
+            
+            <!-- Panel Izquierdo: Info & Mapas -->
+            <div class="flex-1 text-left">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="px-2 py-0.5 bg-indigo-600 rounded text-xs uppercase font-bold tracking-widest text-indigo-100">Simulador Voxel 3D</span>
+                    <span class="px-2 py-0.5 bg-rose-600 rounded text-xs uppercase font-bold tracking-widest text-rose-100">Anti-Estrés</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
+                    CRAFTBLOCK ARENA
+                </h1>
+                <p class="text-slate-300 text-sm md:text-base mb-6 leading-relaxed">
+                    ¡Explora, destruye, construye y combate en un entorno estilo Roblox & Minecraft con físicas súper satisfactorias! Elige un mapa, equipa tu arsenal de herramientas locas y relájate desatando el caos.
+                </p>
+
+                <!-- Selección de Mapa -->
+                <h3 class="font-bold text-slate-200 mb-3 text-sm tracking-wide uppercase">Selecciona el Escenario:</h3>
+                <div class="grid grid-cols-1 gap-3 mb-6">
+                    <!-- Mapa 1 -->
+                    <button onclick="selectMap('destruction')" id="btn-map-destruction" class="map-card group text-left p-3 rounded-xl border-2 border-indigo-600 bg-indigo-950/40 hover:bg-indigo-900/40 transition-all flex items-center gap-4">
+                        <div class="bg-indigo-900 p-2.5 rounded-lg text-2xl group-hover:scale-110 transition-transform">💥</div>
+                        <div>
+                            <div class="font-bold text-white">Sala de Destrucción Estilo Voxel</div>
+                            <div class="text-xs text-slate-400">Perfecto para liberar estrés. ¡Derriba estructuras gigantes de bloques!</div>
+                        </div>
+                    </button>
+                    <!-- Mapa 2 -->
+                    <button onclick="selectMap('obby')" id="btn-map-obby" class="map-card group text-left p-3 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-700/40 transition-all flex items-center gap-4">
+                        <div class="bg-emerald-900 p-2.5 rounded-lg text-2xl group-hover:scale-110 transition-transform">🧗</div>
+                        <div>
+                            <div class="font-bold text-white">Obby de Parkour (Roblox Style)</div>
+                            <div class="text-xs text-slate-400">Supera plataformas flotantes, lava ardiente y alcanza el portal final.</div>
+                        </div>
+                    </button>
+                    <!-- Mapa 3 -->
+                    <button onclick="selectMap('survival')" id="btn-map-survival" class="map-card group text-left p-3 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-700/40 transition-all flex items-center gap-4">
+                        <div class="bg-rose-900 p-2.5 rounded-lg text-2xl group-hover:scale-110 transition-transform">🛡️</div>
+                        <div>
+                            <div class="font-bold text-white">Arena de Combate y Supervivencia</div>
+                            <div class="text-xs text-slate-400">Enfréntate a oleadas de Dummies de prueba interactivos que te persiguen.</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Botón de Iniciar -->
+                <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all text-lg tracking-wider uppercase">
+                    ¡Cargar y Jugar Ahora!
+                </button>
+            </div>
+
+            <!-- Panel Derecho: Controles & Mecánicas -->
+            <div class="w-full md:w-80 bg-slate-950/60 border border-slate-800 p-5 rounded-xl text-left text-xs md:text-sm">
+                <h3 class="font-bold text-slate-200 mb-3 border-b border-slate-800 pb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                    🎮 Controles de Juego
+                </h3>
+                <ul class="space-y-2 text-slate-300">
+                    <li class="flex justify-between"><span class="font-semibold text-white">Movimiento:</span> <span>W, A, S, D / Joystick</span></li>
+                    <li class="flex justify-between"><span class="font-semibold text-white">Mirar:</span> <span>Mover Ratón / Deslizar Pantalla</span></li>
+                    <li class="flex justify-between"><span class="font-semibold text-white">Saltar:</span> <span>Espacio / Botón de Salto</span></li>
+                    <li class="flex justify-between"><span class="font-semibold text-white">Usar Herramienta:</span> <span>Clic Izquierdo / Botón Acción</span></li>
+                    <li class="flex justify-between"><span class="font-semibold text-white">Acción Secundaria:</span> <span>Clic Derecho</span></li>
+                    <li class="flex justify-between"><span class="font-semibold text-white">Cambiar Arma:</span> <span>Teclas 1 - 6</span></li>
+                    <li class="flex justify-between"><span class="font-semibold text-white">Liberar Cursor / Pausa:</span> <span>Tecla Esc</span></li>
+                </ul>
+
+                <h3 class="font-bold text-slate-200 mt-5 mb-3 border-b border-slate-800 pb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                    🔧 Arsenal Disponible
+                </h3>
+                <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+                    <div class="bg-slate-900 p-1.5 rounded border border-slate-800"><span class="block text-lg">⚔️</span>Espada</div>
+                    <div class="bg-slate-900 p-1.5 rounded border border-slate-800"><span class="block text-lg">🚀</span>Plasma</div>
+                    <div class="bg-slate-900 p-1.5 rounded border border-slate-800"><span class="block text-lg">💣</span>Dinamita</div>
+                    <div class="bg-slate-900 p-1.5 rounded border border-slate-800"><span class="block text-lg">🧲</span>Gravedad</div>
+                    <div class="bg-slate-900 p-1.5 rounded border border-slate-800"><span class="block text-lg">🔨</span>Martillo</div>
+                    <div class="bg-slate-900 p-1.5 rounded border border-slate-800"><span class="block text-lg">🧱</span>Constructor</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- INTERFAZ DE HUD (EN JUEGO) -->
+    <div id="gameHUD" class="absolute inset-0 pointer-events-none hidden flex-col justify-between p-4 z-30">
+        <!-- Parte Superior: Misión y Estadísticas -->
+        <div class="flex justify-between items-start w-full">
+            <!-- Tarjeta de Misión / Modo de Juego -->
+            <div class="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl p-3.5 text-white max-w-sm pointer-events-auto flex items-start gap-3 shadow-xl">
+                <div id="missionIcon" class="text-2xl bg-indigo-600/30 border border-indigo-500/50 p-2 rounded-lg">🎯</div>
+                <div>
+                    <h2 id="hudMapTitle" class="font-black text-sm tracking-wider uppercase text-indigo-400">Sala de Destrucción</h2>
+                    <p id="hudMissionDesc" class="text-xs text-slate-300 mt-1">¡Misión: Destruye los bloques de colores y relájate!</p>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2">
+                        <div id="missionProgress" class="bg-gradient-to-r from-emerald-400 to-teal-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <span id="missionTextProgress" class="text-[10px] text-emerald-400 font-bold block mt-1">0% completado</span>
+                </div>
+            </div>
+
+            <!-- Panel de Puntuación, Vida y Botón Menú -->
+            <div class="flex flex-col items-end gap-2">
+                <!-- Botón Volver al Menú -->
+                <button onclick="exitToMenu()" class="pointer-events-auto px-4 py-2 bg-rose-600/90 hover:bg-rose-500 backdrop-blur-sm border border-rose-500/30 text-white rounded-xl font-bold text-xs tracking-wider uppercase transition-all shadow-lg flex items-center gap-1.5">
+                    🚪 Volver al Menú
+                </button>
+                <!-- Estadísticas básicas -->
+                <div class="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl px-4 py-2.5 text-white shadow-xl flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Puntos</div>
+                        <div id="hudScore" class="text-xl font-black text-indigo-400">0</div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-800"></div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Vida</div>
+                        <div id="hudHealth" class="text-xl font-black text-rose-500">100 / 100</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas de Centro (Matar dummies, completar misiones, daño) -->
+        <div id="gameNotification" class="self-center bg-slate-900/90 border-2 border-indigo-500/50 px-6 py-2 rounded-full text-white font-bold tracking-wide shadow-2xl opacity-0 scale-90 transition-all duration-300 transform -translate-y-12">
+            ¡Bloques destruidos! +10 puntos
+        </div>
+
+        <!-- Parte Inferior: Barra de herramientas (Hotbar) -->
+        <div class="flex flex-col items-center gap-3 w-full">
+            <!-- Guía rápida para usar herramientas -->
+            <div class="text-[10px] text-slate-300 font-bold bg-slate-950/75 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-800 tracking-wide pointer-events-auto">
+                <span class="text-indigo-400">Clic Izquierdo</span> para usar herramienta • <span class="text-indigo-400">Clic Derecho</span> para interactuar • Ruedita/Teclas 1-6 para cambiar
+            </div>
+
+            <!-- Hotbar Estilo Minecraft / Roblox -->
+            <div class="flex items-center gap-1.5 bg-slate-950/80 border-2 border-slate-800 backdrop-blur-md p-1.5 rounded-2xl shadow-2xl pointer-events-auto">
+                <!-- Espada -->
+                <button onclick="selectWeapon(0)" id="hotbar-0" class="hotbar-slot relative w-14 h-14 rounded-xl border-2 border-indigo-500 bg-indigo-950/50 hover:bg-slate-800 flex flex-col items-center justify-center transition-all">
+                    <span class="text-2xl">⚔️</span>
+                    <span class="absolute bottom-0.5 right-1.5 text-[9px] font-bold text-slate-400">1</span>
+                </button>
+                <!-- Lanzacohetes de Plasma -->
+                <button onclick="selectWeapon(1)" id="hotbar-1" class="hotbar-slot relative w-14 h-14 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 flex flex-col items-center justify-center transition-all">
+                    <span class="text-2xl">🚀</span>
+                    <span class="absolute bottom-0.5 right-1.5 text-[9px] font-bold text-slate-400">2</span>
+                </button>
+                <!-- Dinamita / TNT -->
+                <button onclick="selectWeapon(2)" id="hotbar-2" class="hotbar-slot relative w-14 h-14 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 flex flex-col items-center justify-center transition-all">
+                    <span class="text-2xl">💣</span>
+                    <span class="absolute bottom-0.5 right-1.5 text-[9px] font-bold text-slate-400">3</span>
+                </button>
+                <!-- Pistola Gravitacional -->
+                <button onclick="selectWeapon(3)" id="hotbar-3" class="hotbar-slot relative w-14 h-14 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 flex flex-col items-center justify-center transition-all">
+                    <span class="text-2xl">🧲</span>
+                    <span class="absolute bottom-0.5 right-1.5 text-[9px] font-bold text-slate-400">4</span>
+                </button>
+                <!-- Martillo de Demolición -->
+                <button onclick="selectWeapon(4)" id="hotbar-4" class="hotbar-slot relative w-14 h-14 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 flex flex-col items-center justify-center transition-all">
+                    <span class="text-2xl">🔨</span>
+                    <span class="absolute bottom-0.5 right-1.5 text-[9px] font-bold text-slate-400">5</span>
+                </button>
+                <!-- Lanzador de Bloques -->
+                <button onclick="selectWeapon(5)" id="hotbar-5" class="hotbar-slot relative w-14 h-14 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 flex flex-col items-center justify-center transition-all">
+                    <span class="text-2xl">🧱</span>
+                    <span class="absolute bottom-0.5 right-1.5 text-[9px] font-bold text-slate-400">6</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTROLES TÁCTILES PARA MÓVILES (SÓLO COMPATIBILIDAD) -->
+    <div id="mobileControls" class="absolute inset-0 pointer-events-none hidden z-20">
+        <!-- Joystick virtual -->
+        <div id="joystickContainer" class="pointer-events-auto">
+            <div id="joystickNipple"></div>
+        </div>
+
+        <!-- Panel de Botones Táctiles Derecha -->
+        <div class="absolute bottom-8 right-8 flex flex-col gap-4 pointer-events-auto">
+            <!-- Botón de Usar Herramienta / Disparo -->
+            <button id="btnMobileFire" class="w-20 h-20 bg-indigo-600/80 border-2 border-indigo-400 rounded-full flex items-center justify-center active:scale-95 transition-all text-white font-black text-2xl shadow-2xl">
+                💥
+            </button>
+            <div class="flex gap-4">
+                <!-- Botón de Salto -->
+                <button id="btnMobileJump" class="w-14 h-14 bg-slate-800/80 border-2 border-slate-600 rounded-full flex items-center justify-center active:scale-95 transition-all text-white font-bold text-xl shadow-2xl">
+                    🦘
+                </button>
+                <!-- Botón Acción Secundaria -->
+                <button id="btnMobileInteract" class="w-14 h-14 bg-slate-800/80 border-2 border-slate-600 rounded-full flex items-center justify-center active:scale-95 transition-all text-white font-bold text-lg shadow-2xl">
+                    🧱
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE RECARGAR AL MORIR / GANAR -->
+    <div id="deathScreen" class="absolute inset-0 bg-rose-950/90 flex flex-col items-center justify-center z-50 p-6 text-white hidden">
+        <div class="max-w-md w-full bg-slate-900/80 border border-rose-700/50 backdrop-blur-md rounded-2xl p-8 shadow-2xl text-center">
+            <div class="text-6xl mb-4">💀</div>
+            <h2 id="deathTitle" class="text-3xl font-black tracking-tight text-rose-500 mb-2">HAS CAÍDO / PERDIDO</h2>
+            <p id="deathReason" class="text-slate-300 text-sm mb-6">Tocaste la lava ardiente o fuiste derrotado por los Dummies de prueba.</p>
+            <div class="flex gap-4">
+                <button onclick="startGame()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all">Reintentar</button>
+                <button onclick="exitToMenu()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all">Menú</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE VICTORIA -->
+    <div id="victoryScreen" class="absolute inset-0 bg-emerald-950/90 flex flex-col items-center justify-center z-50 p-6 text-white hidden">
+        <div class="max-w-md w-full bg-slate-900/80 border border-emerald-700/50 backdrop-blur-md rounded-2xl p-8 shadow-2xl text-center">
+            <div class="text-6xl mb-4">👑</div>
+            <h2 class="text-3xl font-black tracking-tight text-emerald-400 mb-2">¡MISIÓN COMPLETADA!</h2>
+            <p id="victoryReason" class="text-slate-300 text-sm mb-6">¡Has dominado el Obby o destruido los objetivos con un excelente puntaje!</p>
+            <div class="flex gap-4">
+                <button onclick="exitToMenu()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOQUE DE LÓGICA Y CÓDIGO DEL JUEGO -->
+    <script>
+        // --- SINTETIZADOR DE SONIDOS (Web Audio API) ---
+        // Generador de sonidos anti-estrés para evitar cargar archivos externos pesados
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'break': // Ruido al romper bloque
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                    
+                case 'laser': // Disparo láser plasma
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                    break;
+                    
+                case 'explosion': // Cañón / Explosión TNT
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.linearRampToValueAtTime(30, now + 0.5);
+                    // Filtro de paso bajo para darle más realismo al impacto
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(300, now);
+                    filter.frequency.linearRampToValueAtTime(20, now + 0.5);
+                    
+                    osc.disconnect(gain);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    
+                    gain.gain.setValueAtTime(0.8, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                    break;
+                    
+                case 'sword': // Corte con espada
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                    break;
+                    
+                case 'jump': // Salto del jugador
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                    
+                case 'hurt': // Cuando el jugador recibe daño
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.setValueAtTime(120, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                    break;
+                    
+                case 'victory': // Sonido de haber ganado
+                    osc.type = 'sine';
+                    const notes = [261.6, 329.6, 392.0, 523.3];
+                    notes.forEach((freq, idx) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(audioCtx.destination);
+                        noteOsc.type = 'sine';
+                        noteOsc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                        noteGain.gain.setValueAtTime(0.2, now + idx * 0.15);
+                        noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.15 + 0.3);
+                        noteOsc.start(now + idx * 0.15);
+                        noteOsc.stop(now + idx * 0.15 + 0.3);
+                    });
+                    break;
+            }
+        }
+
+        // --- VARIABLES GLOBALES DEL JUEGO ---
+        let selectedMapType = 'destruction'; // 'destruction', 'obby', 'survival'
+        let currentWeapon = 0; // 0: Espada, 1: Plasma, 2: TNT, 3: Gravedad, 4: Martillo, 5: Bloques
+        let activeScore = 0;
+        let activeHealth = 100;
+        let blocksBrokenInMap = 0;
+        let totalGoalBlocks = 40; // Objetivo para pasar mapa
+        let isGameRunning = false;
+        let lastTime = 0;
+
+        // Configuración de la escena de ThreeJS
+        let scene, camera, renderer, clock;
+        let player = {
+            pos: new THREE.Vector3(0, 5, 0),
+            vel: new THREE.Vector3(),
+            dir: new THREE.Vector3(),
+            speed: 10,
+            onGround: false,
+            radius: 1.2,
+            height: 2.2
+        };
+
+        // Arreglos de objetos
+        let blocks = [];
+        let physicsObjects = []; // Bloques arrojables, proyectiles, etc.
+        let dynamicEntities = []; // Dummies interactivos de prueba
+        let particleSystem = [];
+        let environmentLights = [];
+        let portalEntity = null; // Para mapa de Obby
+
+        // Variables de interacción física/gravedad
+        let grabTarget = null;
+        let grabDistance = 6;
+
+        // Controladores de estado de ratón/teclas
+        let keys = {};
+        let isPointerLocked = false;
+        let mouseLookX = 0, mouseLookY = 0;
+        const mouseSensitivity = 0.0022;
+
+        // Joystick móvil táctil
+        let touchJoystick = { active: false, startX: 0, startY: 0, currX: 0, currY: 0, dirX: 0, dirY: 0 };
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // --- SISTEMA DE INICIO Y CAMBIO DE INTERFAZ ---
+
+        function selectMap(mapType) {
+            selectedMapType = mapType;
+            // Estilizar botón seleccionado
+            document.querySelectorAll('.map-card').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'bg-indigo-950/40');
+                btn.classList.add('border-slate-700', 'bg-slate-800/40');
+            });
+            const selectedBtn = document.getElementById(`btn-map-${mapType}`);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('border-slate-700', 'bg-slate-800/40');
+                selectedBtn.classList.add('border-indigo-600', 'bg-indigo-950/40');
+            }
+        }
+
+        function startGame() {
+            // Esconder todas las pantallas
+            document.getElementById('mainMenu').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('deathScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+            document.getElementById('gameHUD').classList.remove('hidden');
+            document.getElementById('reticle').classList.remove('hidden');
+
+            if (isMobileDevice) {
+                document.getElementById('mobileControls').classList.remove('hidden');
+                document.getElementById('joystickContainer').style.display = 'block';
+            }
+
+            // Solicitar bloqueo de cursor si es PC
+            if (!isMobileDevice) {
+                document.getElementById('gameCanvas').requestPointerLock();
+            }
+
+            // Resetear estadísticas
+            activeScore = 0;
+            activeHealth = 100;
+            blocksBrokenInMap = 0;
+            updateHUD();
+
+            // Inicializar o reconstruir la escena del juego
+            initThreeJS();
+            buildWorld(selectedMapType);
+
+            isGameRunning = true;
+            clock = new THREE.Clock();
+            lastTime = performance.now();
+            
+            // Iniciar Audio Context
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function exitToMenu() {
+            isGameRunning = false;
+            document.exitPointerLock();
+            document.getElementById('mainMenu').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('gameHUD').classList.add('hidden');
+            document.getElementById('reticle').classList.add('hidden');
+            document.getElementById('mobileControls').classList.add('hidden');
+            document.getElementById('joystickContainer').style.display = 'none';
+            document.getElementById('deathScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('hudScore').innerText = activeScore;
+            document.getElementById('hudHealth').innerText = `${Math.max(0, Math.floor(activeHealth))} / 100`;
+            
+            let missionTitle = "Sala de Destrucción";
+            let missionDesc = "Misión: ¡Rompe bloques, libera tensión!";
+            let progressPct = 0;
+
+            if (selectedMapType === 'destruction') {
+                missionTitle = "Sala de Destrucción";
+                progressPct = Math.min(100, Math.floor((blocksBrokenInMap / totalGoalBlocks) * 100));
+                missionDesc = `Destruye bloques de colores (${blocksBrokenInMap}/${totalGoalBlocks})`;
+            } else if (selectedMapType === 'obby') {
+                missionTitle = "Obby de Parkour";
+                missionDesc = "Llega sano y salvo al portal dorado del final";
+                progressPct = Math.floor(Math.min(100, (player.pos.z / 60) * 100)); // Aproximar por posición
+            } else if (selectedMapType === 'survival') {
+                missionTitle = "Arena de Supervivencia";
+                progressPct = Math.min(100, Math.floor((activeScore / 250) * 100));
+                missionDesc = `Destruye a los Dummies (${activeScore}/250 puntos)`;
+            }
+
+            document.getElementById('hudMapTitle').innerText = missionTitle;
+            document.getElementById('hudMissionDesc').innerText = missionDesc;
+            document.getElementById('missionProgress').style.width = `${progressPct}%`;
+            document.getElementById('missionTextProgress').innerText = `${progressPct}% completado`;
+
+            // Evaluar condiciones de victoria específicas
+            if (selectedMapType === 'destruction' && blocksBrokenInMap >= totalGoalBlocks) {
+                triggerVictory();
+            } else if (selectedMapType === 'survival' && activeScore >= 250) {
+                triggerVictory();
+            }
+        }
+
+        function triggerNotification(text) {
+            const notif = document.getElementById('gameNotification');
+            notif.innerText = text;
+            notif.classList.remove('opacity-0', 'scale-90', '-translate-y-12');
+            notif.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+            
+            setTimeout(() => {
+                notif.classList.add('opacity-0', 'scale-90', '-translate-y-12');
+                notif.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
+            }, 1800);
+        }
+
+        function triggerDeath(reason) {
+            isGameRunning = false;
+            document.exitPointerLock();
+            document.getElementById('deathReason').innerText = reason;
+            document.getElementById('deathScreen').classList.remove('hidden');
+            playSound('hurt');
+        }
+
+        function triggerVictory() {
+            isGameRunning = false;
+            document.exitPointerLock();
+            document.getElementById('victoryScreen').classList.remove('hidden');
+            playSound('victory');
+        }
+
+        // --- INICIALIZACIÓN DE THREE.JS ---
+
+        function initThreeJS() {
+            const canvas = document.getElementById('gameCanvas');
+            
+            // Si ya existe un renderer, liberar memoria
+            if (renderer) {
+                renderer.dispose();
+                while(scene.children.length > 0){ 
+                    scene.remove(scene.children[0]); 
+                }
+            }
+
+            scene = new THREE.Scene();
+            // Neblina azulada profunda para dar sensación de inmersión y realismo de luces
+            scene.background = new THREE.Color('#080b11');
+            scene.fog = new THREE.FogExp2('#080b11', 0.015);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(player.pos.x, player.pos.y, player.pos.z);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Iluminación realista estilo Roblox/Minecraft
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xfff7e6, 0.8);
+            sunLight.position.set(30, 60, 20);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 150;
+            const d = 50;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            scene.add(sunLight);
+
+            // Guardar luces para referencias si es necesario recrear
+            environmentLights = [ambientLight, sunLight];
+
+            // Resetear arreglos de juego
+            blocks = [];
+            physicsObjects = [];
+            dynamicEntities = [];
+            particleSystem = [];
+            grabTarget = null;
+        }
+
+        // Ajustar pantalla al redimensionar
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+
+        // --- CONSTRUCTOR DE ESCENARIOS / MAPAS ---
+
+        function buildWorld(mapType) {
+            // Limpiar todo antes de construir
+            blocks.forEach(b => scene.remove(b.mesh));
+            blocks = [];
+
+            if (mapType === 'destruction') {
+                // Mapa 1: Habitación llena de estructuras de colores para destruir
+                // Suelo de concreto voxelizado
+                createFloor(40, 40, '#1c1e24');
+
+                // Pilares y torres con bloques fáciles de destruir
+                const colors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b'];
+                
+                // Estructura de torre central
+                for (let x = -3; x <= 3; x += 1.5) {
+                    for (let z = -3; z <= 3; z += 1.5) {
+                        for (let y = 0.75; y < 8; y += 1.5) {
+                            if (Math.random() > 0.15) {
+                                const col = colors[Math.floor(Math.random() * colors.length)];
+                                addVoxelBlock(x, y, z - 10, col, 1.4, 25); // Bloques con vida intermedia
+                            }
+                        }
+                    }
+                }
+
+                // Pirámide al costado
+                for (let level = 0; level < 5; level++) {
+                    const count = 5 - level;
+                    const offset = level * 0.75;
+                    const colorIndex = level % colors.length;
+                    for (let x = -count; x < count; x++) {
+                        for (let z = -count; z < count; z++) {
+                            addVoxelBlock(
+                                x * 1.5 + 12 + offset, 
+                                level * 1.5 + 0.75, 
+                                z * 1.5 - 5 + offset, 
+                                colors[colorIndex], 
+                                1.4, 
+                                15
+                            );
+                        }
+                    }
+                }
+
+                // Generar un par de Dummies estáticos para golpear
+                spawnDummy(0, 1, -18);
+                spawnDummy(-8, 1, -8);
+                spawnDummy(8, 1, -8);
+
+                player.pos.set(0, 2, 8);
+                player.vel.set(0, 0, 0);
+
+            } else if (mapType === 'obby') {
+                // Mapa 2: Parkour flotante (Roblox Obby)
+                // Plataforma de inicio segura
+                createPlatform(0, 0, 0, 8, 1, 8, '#312e81');
+
+                // Serie de plataformas flotantes con diferentes formas y distancias
+                const steps = [
+                    { x: 0, y: 1.5, z: -8, sx: 3, sz: 3, col: '#4f46e5' },
+                    { x: -3, y: 3, z: -14, sx: 2, sz: 2, col: '#f59e0b' }, // Amarilla móvil o pequeña
+                    { x: 3, y: 4.5, z: -20, sx: 2, sz: 2, col: '#10b981' },
+                    { x: 0, y: 6, z: -28, sx: 4, sz: 2, col: '#06b6d4' },
+                ];
+
+                steps.forEach(st => {
+                    createPlatform(st.x, st.y, st.z, st.sx, 0.8, st.sz, st.col);
+                });
+
+                // Peligro de lava en el fondo (Si el jugador cae a y < -5 muere)
+                const lavaGeo = new THREE.BoxGeometry(120, 2, 120);
+                const lavaMat = new THREE.MeshBasicMaterial({ color: 0xff3300, emissive: 0xff3300 });
+                const lava = new THREE.Mesh(lavaGeo, lavaMat);
+                lava.position.set(0, -7, -25);
+                scene.add(lava);
+
+                // Bloques de lava trampa flotantes (Color rojo brillante, toparlos te mata)
+                createPlatform(0, 7, -35, 1.8, 1.8, 1.8, '#ef4444', true); // Trampa
+                createPlatform(-3, 8.5, -42, 2.5, 0.8, 2.5, '#4f46e5');
+                createPlatform(3, 10, -48, 2.5, 0.8, 2.5, '#4f46e5');
+
+                // Plataforma de llegada
+                createPlatform(0, 11, -58, 8, 1, 8, '#047857');
+
+                // Portal dorado de victoria
+                const portalGeo = new THREE.TorusGeometry(1.5, 0.3, 16, 100);
+                const portalMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, roughness: 0.1 });
+                portalEntity = new THREE.Mesh(portalGeo, portalMat);
+                portalEntity.position.set(0, 13, -58);
+                scene.add(portalEntity);
+
+                player.pos.set(0, 2, 0);
+                player.vel.set(0, 0, 0);
+
+            } else if (mapType === 'survival') {
+                // Mapa 3: Arena circular cerrada con Dummies hostiles que reaparecen
+                createFloor(50, 50, '#111827');
+
+                // Paredes para delimitar la arena
+                createWall(0, 4, -25, 50, 8, 1, '#1f2937');
+                createWall(0, 4, 25, 50, 8, 1, '#1f2937');
+                createWall(-25, 4, 0, 1, 8, 50, '#1f2937');
+                createWall(25, 4, 0, 1, 8, 50, '#1f2937');
+
+                // Estructuras defensivas en el centro (obstáculos estilo Minecraft)
+                for (let x = -10; x <= 10; x += 10) {
+                    for (let z = -10; z <= 10; z += 10) {
+                        if (x !== 0 || z !== 0) {
+                            // Pilares de piedra robustos
+                            for (let y = 0.75; y < 4; y += 1.5) {
+                                addVoxelBlock(x, y, z, '#4b5563', 1.5, 100); // 100 de vida (muy fuertes)
+                            }
+                        }
+                    }
+                }
+
+                // Spawners de Dummies interactivos
+                spawnDummy(-15, 1, -15, true); // Hostil
+                spawnDummy(15, 1, -15, true);
+                spawnDummy(15, 1, 15, true);
+                spawnDummy(-15, 1, 15, true);
+
+                player.pos.set(0, 2, 0);
+                player.vel.set(0, 0, 0);
+                
+                triggerNotification("¡Sobrevive y derrota a los Dummies!");
+            }
+        }
+
+        // --- SISTEMAS DE CREACIÓN AUXILIARES ---
+
+        function createFloor(w, d, colorHex) {
+            // Suelo plano texturizado
+            const geo = new THREE.BoxGeometry(w, 2, d);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color(colorHex), 
+                roughness: 0.85,
+                metalness: 0.1 
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(0, -1, 0);
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            // Agregar a la lista de bloques estables para colisión (como una caja estática)
+            blocks.push({
+                mesh: mesh,
+                box: new THREE.Box3().setFromObject(mesh),
+                breakable: false,
+                isLava: false
+            });
+        }
+
+        function createPlatform(x, y, z, sx, sy, sz, colorHex, isLava = false) {
+            const geo = new THREE.BoxGeometry(sx, sy, sz);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color(colorHex), 
+                roughness: 0.7,
+                emissive: isLava ? 0xff0000 : 0x000000,
+                emissiveIntensity: isLava ? 0.8 : 0
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            blocks.push({
+                mesh: mesh,
+                box: new THREE.Box3().setFromObject(mesh),
+                breakable: false,
+                isLava: isLava
+            });
+        }
+
+        function createWall(x, y, z, sx, sy, sz, colorHex) {
+            createPlatform(x, y, z, sx, sy, sz, colorHex);
+        }
+
+        // Bloques voxel estilo Minecraft destructibles individualmente
+        function addVoxelBlock(x, y, z, colorHex, size = 1.4, health = 20) {
+            const geo = new THREE.BoxGeometry(size, size, size);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color(colorHex), 
+                roughness: 0.9,
+                metalness: 0.05
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            blocks.push({
+                mesh: mesh,
+                box: new THREE.Box3().setFromObject(mesh),
+                breakable: true,
+                maxHealth: health,
+                health: health,
+                color: colorHex
+            });
+        }
+
+        // --- ENFERMERÍA Y DUMMIES INTERACTIVOS ---
+
+        function spawnDummy(x, y, z, isHostile = false) {
+            // Un Dummy estilo personaje Roblox/Minecraft formado por cubos
+            const dummyGroup = new THREE.Group();
+            dummyGroup.position.set(x, y + 1.5, z);
+
+            // Materiales de colores vibrantes estilo Roblox
+            const torsoMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }); // Azul
+            const limbMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.6 });  // Amarillo
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.6 });  // Amarillo claro
+            const faceMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Ojos pintados
+
+            // Cabeza (Cubo)
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), headMat);
+            head.position.y = 1.3;
+            head.castShadow = true;
+            dummyGroup.add(head);
+
+            // Ojos sencillos voxelados
+            const eye1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.1), faceMat);
+            eye1.position.set(-0.2, 1.4, 0.41);
+            const eye2 = eye1.clone();
+            eye2.position.x = 0.2;
+            dummyGroup.add(eye1);
+            dummyGroup.add(eye2);
+
+            // Torso (Cubo rectangular)
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.6), torsoMat);
+            torso.position.y = 0.2;
+            torso.castShadow = true;
+            dummyGroup.add(torso);
+
+            // Brazos
+            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.3, 0.4), limbMat);
+            leftArm.position.set(-0.85, 0.2, 0);
+            leftArm.castShadow = true;
+            dummyGroup.add(leftArm);
+
+            const rightArm = leftArm.clone();
+            rightArm.position.x = 0.85;
+            dummyGroup.add(rightArm);
+
+            // Piernas
+            const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.5), torsoMat);
+            leftLeg.position.set(-0.35, -1.1, 0);
+            leftLeg.castShadow = true;
+            dummyGroup.add(leftLeg);
+
+            const rightLeg = leftLeg.clone();
+            rightLeg.position.x = 0.35;
+            dummyGroup.add(rightLeg);
+
+            scene.add(dummyGroup);
+
+            // Guardar estado del Dummy para IA básica o interacciones
+            dynamicEntities.push({
+                group: dummyGroup,
+                mesh: torso, // Usar torso para cálculo de impacto principal
+                health: 50,
+                maxHealth: 50,
+                isHostile: isHostile,
+                speed: 3.5,
+                cooldown: 0,
+                wobbleOffset: Math.random() * 100 // Para simulación de movimiento gracioso
+            });
+        }
+
+        // --- GESTIÓN DE ENTRADAS DEL USUARIO ---
+
+        // Control de teclado básico
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            
+            // Selección rápida de hotbar 1 a 6
+            if (e.code >= 'Digit1' && e.code <= 'Digit6') {
+                const idx = parseInt(e.code.charAt(5)) - 1;
+                selectWeapon(idx);
+            }
+            if (e.code === 'Space' && player.onGround && isGameRunning) {
+                player.vel.y = 9.5; // Impulso de salto vertical
+                player.onGround = false;
+                playSound('jump');
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Configuración de bloqueo del puntero (Pointer Lock)
+        const canvas = document.getElementById('gameCanvas');
+        
+        canvas.addEventListener('click', (e) => {
+            if (!isGameRunning) return;
+            if (!isMobileDevice) {
+                canvas.requestPointerLock();
+            }
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === canvas) {
+                isPointerLocked = true;
+            } else {
+                isPointerLocked = false;
+            }
+        });
+
+        // Evento de mover ratón para control de cámara
+        window.addEventListener('mousemove', (e) => {
+            if (isPointerLocked && isGameRunning) {
+                mouseLookX -= e.movementX * mouseSensitivity;
+                mouseLookY -= e.movementY * mouseSensitivity;
+                
+                // Límites de rotación vertical (evitar dar vueltas sobre sí mismo)
+                mouseLookY = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, mouseLookY));
+            }
+        });
+
+        // Clics para usar herramientas (Armas / Destrucción)
+        window.addEventListener('mousedown', (e) => {
+            if (!isGameRunning) return;
+            
+            if (e.button === 0) { // Clic izquierdo
+                useActiveTool();
+            } else if (e.button === 2) { // Clic derecho para interactuar o construir rápido
+                useSecondaryAction();
+            }
+        });
+
+        // Prevenir menú contextual del clic derecho
+        window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // --- SISTEMAS DE DETECCIÓN TÁCTIL (MÓVILES) ---
+
+        let touchStartPos = { x: 0, y: 0 };
+        let activeTouchIdLook = null;
+        let activeTouchIdJoystick = null;
+
+        window.addEventListener('touchstart', (e) => {
+            if (!isGameRunning || !isMobileDevice) return;
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                
+                // Lado izquierdo: Activar Joystick virtual
+                if (touch.clientX < window.innerWidth / 2) {
+                    if (activeTouchIdJoystick === null) {
+                        activeTouchIdJoystick = touch.identifier;
+                        touchJoystick.active = true;
+                        touchJoystick.startX = touch.clientX;
+                        touchJoystick.startY = touch.clientY;
+                        touchJoystick.currX = touch.clientX;
+                        touchJoystick.currY = touch.clientY;
+                        
+                        const container = document.getElementById('joystickContainer');
+                        container.style.left = `${touch.clientX - 60}px`;
+                        container.style.bottom = `${window.innerHeight - touch.clientY - 60}px`;
+                    }
+                } else {
+                    // Lado derecho: Deslizar cámara
+                    if (activeTouchIdLook === null) {
+                        activeTouchIdLook = touch.identifier;
+                        touchStartPos.x = touch.clientX;
+                        touchStartPos.y = touch.clientY;
+                    }
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isGameRunning || !isMobileDevice) return;
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                
+                if (touch.identifier === activeTouchIdJoystick) {
+                    touchJoystick.currX = touch.clientX;
+                    touchJoystick.currY = touch.clientY;
+                    
+                    // Calcular vector de movimiento
+                    let dx = touchJoystick.currX - touchJoystick.startX;
+                    let dy = touchJoystick.currY - touchJoystick.startY;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const maxDist = 45;
+                    
+                    if (dist > maxDist) {
+                        dx = (dx / dist) * maxDist;
+                        dy = (dy / dist) * maxDist;
+                    }
+                    
+                    // Renderizar Nipple
+                    const nipple = document.getElementById('joystickNipple');
+                    nipple.style.transform = `translate(${dx}px, ${dy}px)`;
+                    
+                    // Guardar direcciones normalizadas para el loop
+                    touchJoystick.dirX = dx / maxDist;
+                    touchJoystick.dirY = dy / maxDist;
+                } else if (touch.identifier === activeTouchIdLook) {
+                    const dx = touch.clientX - touchStartPos.x;
+                    const dy = touch.clientY - touchStartPos.y;
+                    
+                    mouseLookX -= dx * 0.005;
+                    mouseLookY -= dy * 0.005;
+                    mouseLookY = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, mouseLookY));
+                    
+                    touchStartPos.x = touch.clientX;
+                    touchStartPos.y = touch.clientY;
+                }
+            }
+        }, { passive: true });
+
+        const endTouchHandler = (e) => {
+            if (!isGameRunning) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                
+                if (touch.identifier === activeTouchIdJoystick) {
+                    activeTouchIdJoystick = null;
+                    touchJoystick.active = false;
+                    touchJoystick.dirX = 0;
+                    touchJoystick.dirY = 0;
+                    
+                    // Resetear posición estética
+                    const container = document.getElementById('joystickContainer');
+                    container.style.left = '40px';
+                    container.style.bottom = '40px';
+                    const nipple = document.getElementById('joystickNipple');
+                    nipple.style.transform = 'translate(0px, 0px)';
+                } else if (touch.identifier === activeTouchIdLook) {
+                    activeTouchIdLook = null;
+                }
+            }
+        };
+
+        window.addEventListener('touchend', endTouchHandler, { passive: true });
+        window.addEventListener('touchcancel', endTouchHandler, { passive: true });
+
+        // Asociar eventos táctiles a los botones virtuales
+        document.getElementById('btnMobileFire').addEventListener('click', (e) => {
+            e.stopPropagation();
+            useActiveTool();
+        });
+        document.getElementById('btnMobileJump').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (player.onGround && isGameRunning) {
+                player.vel.y = 9.5;
+                player.onGround = false;
+                playSound('jump');
+            }
+        });
+        document.getElementById('btnMobileInteract').addEventListener('click', (e) => {
+            e.stopPropagation();
+            useSecondaryAction();
+        });
+
+
+        // --- LÓGICA DE BARRA DE HERRAMIENTAS (HOTBAR) ---
+
+        function selectWeapon(idx) {
+            currentWeapon = idx;
+            // Remover estilos antiguos
+            document.querySelectorAll('.hotbar-slot').forEach(slot => {
+                slot.classList.remove('border-indigo-500', 'bg-indigo-950/50');
+                slot.classList.add('border-slate-800', 'bg-slate-900/60');
+            });
+            // Activar nuevo estilo
+            const activeSlot = document.getElementById(`hotbar-${idx}`);
+            if (activeSlot) {
+                activeSlot.classList.remove('border-slate-800', 'bg-slate-900/60');
+                activeSlot.classList.add('border-indigo-500', 'bg-indigo-950/50');
+            }
+        }
+
+        // --- SISTEMA DE HERRAMIENTAS ACTIVAS ---
+
+        function useActiveTool() {
+            // Lanzamiento de rayo (raycasting) para golpear
+            const raycaster = new THREE.Raycaster();
+            const centerScreen = new THREE.Vector2(0, 0); // En el centro de la pantalla
+            raycaster.setFromCamera(centerScreen, camera);
+
+            switch(currentWeapon) {
+                case 0: // Espada: Daño a corta distancia
+                    playSound('sword');
+                    performMeleeAttack(raycaster, 4, 30);
+                    break;
+
+                case 1: // Lanzacohetes de Plasma
+                    playSound('laser');
+                    shootProjectile('plasma');
+                    break;
+
+                case 2: // Lanzar Bloques de TNT
+                    playSound('jump');
+                    shootProjectile('tnt');
+                    break;
+
+                case 3: // Pistola de Gravedad (Interactuar / Lanzar objetos del entorno)
+                    if (grabTarget) {
+                        // Lanzar el bloque capturado hacia adelante
+                        playSound('explosion');
+                        throwGrabbedObject();
+                    } else {
+                        // Intentar capturar un bloque con raycast
+                        attemptGrabObject(raycaster);
+                    }
+                    break;
+
+                case 4: // Martillo Gigante: Daño a corta distancia pero masivo
+                    playSound('break');
+                    performMeleeAttack(raycaster, 5, 50, true); // Área de impacto expansiva
+                    break;
+
+                case 5: // Lanzador / Constructor de Bloques (Minecraft style)
+                    placeBlockInFront(raycaster);
+                    break;
+            }
+        }
+
+        function useSecondaryAction() {
+            // Acción rápida por defecto: soltar bloque atrapado o construir rápido
+            if (grabTarget) {
+                // Simplemente soltar sin lanzar
+                grabTarget = null;
+            } else {
+                // Colocar un bloque de color aleatorio
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+                placeBlockInFront(raycaster);
+            }
+        }
+
+        // Ataque cuerpo a cuerpo (Espada y Martillo)
+        function performMeleeAttack(raycaster, maxDist, damage, isAOE = false) {
+            // 1. Validar colisión contra Dummies
+            let hitDummy = false;
+            dynamicEntities.forEach(dum => {
+                const dist = player.pos.distanceTo(dum.group.position);
+                if (dist <= maxDist) {
+                    dum.health -= damage;
+                    triggerNotification(`¡Golpeaste a Dummy! (${dum.health} HP)`);
+                    
+                    // Retroceso gracioso estilo Roblox
+                    const knockback = new THREE.Vector3().subVectors(dum.group.position, player.pos).normalize();
+                    dum.group.position.addScaledVector(knockback, 1.5);
+                    spawnImpactParticles(dum.group.position, '#ef4444', 15);
+                    hitDummy = true;
+                    
+                    if (dum.health <= 0) {
+                        activeScore += 50;
+                        updateHUD();
+                        triggerNotification("¡Dummy derrotado! +50 Ptos");
+                        spawnImpactParticles(dum.group.position, '#facc15', 30);
+                        // Remover del mundo
+                        scene.remove(dum.group);
+                        dynamicEntities = dynamicEntities.filter(d => d !== dum);
+                        
+                        // Si es Arena, regenerar otro dummy al azar
+                        if (selectedMapType === 'survival') {
+                            setTimeout(() => {
+                                const rx = (Math.random() - 0.5) * 40;
+                                const rz = (Math.random() - 0.5) * 40;
+                                spawnDummy(rx, 1, rz, true);
+                            }, 3000);
+                        }
+                    }
+                }
+            });
+
+            // 2. Si no es un dummy, golpear bloques del mapa
+            if (!hitDummy) {
+                const intersects = raycaster.intersectObjects(blocks.map(b => b.mesh));
+                if (intersects.length > 0 && intersects[0].distance <= maxDist) {
+                    const hitObj = intersects[0].object;
+                    const blockData = blocks.find(b => b.mesh === hitObj);
+                    
+                    if (blockData && blockData.breakable) {
+                        blockData.health -= damage;
+                        spawnImpactParticles(intersects[0].point, blockData.color, 8);
+                        
+                        if (blockData.health <= 0) {
+                            playSound('break');
+                            spawnImpactParticles(hitObj.position, blockData.color, 24);
+                            scene.remove(hitObj);
+                            blocks = blocks.filter(b => b !== blockData);
+                            blocksBrokenInMap++;
+                            activeScore += 10;
+                            updateHUD();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Lanzamiento de proyectiles (Plasma / TNT)
+        function shootProjectile(type) {
+            const size = type === 'tnt' ? 0.9 : 0.4;
+            const geo = type === 'tnt' ? new THREE.BoxGeometry(size, size, size) : new THREE.SphereGeometry(size, 8, 8);
+            
+            const color = type === 'tnt' ? 0xef4444 : 0x06b6d4;
+            const mat = new THREE.MeshBasicMaterial({ color: color });
+            const mesh = new THREE.Mesh(geo, mat);
+            
+            // Posición de disparo adelante de la cámara
+            const spawnPos = new THREE.Vector3().copy(player.pos);
+            const shootDir = new THREE.Vector3();
+            camera.getWorldDirection(shootDir);
+            spawnPos.addScaledVector(shootDir, 1.2);
+            mesh.position.copy(spawnPos);
+            mesh.castShadow = true;
+            
+            scene.add(mesh);
+
+            physicsObjects.push({
+                mesh: mesh,
+                type: type,
+                vel: shootDir.multiplyScalar(type === 'tnt' ? 12 : 28), // El plasma vuela rápido
+                timer: type === 'tnt' ? 2.5 : 4.0, // Cuenta regresiva de la dinamita
+                radius: size
+            });
+        }
+
+        // Mecánica de la Pistola de Gravedad (Físicas muy desestresantes)
+        function attemptGrabObject(raycaster) {
+            const intersects = raycaster.intersectObjects(blocks.map(b => b.mesh));
+            if (intersects.length > 0 && intersects[0].distance <= 12) {
+                const hitObj = intersects[0].object;
+                const blockData = blocks.find(b => b.mesh === hitObj);
+                
+                // Sólo podemos capturar bloques individuales destructibles
+                if (blockData && blockData.breakable) {
+                    grabTarget = blockData;
+                    grabDistance = intersects[0].distance;
+                    triggerNotification("📦 Bloque capturado");
+                }
+            }
+        }
+
+        function throwGrabbedObject() {
+            if (!grabTarget) return;
+            
+            // Remover de bloques estáticos y convertir en dinámico/arrojable
+            blocks = blocks.filter(b => b !== grabTarget);
+            
+            const shootDir = new THREE.Vector3();
+            camera.getWorldDirection(shootDir);
+            
+            physicsObjects.push({
+                mesh: grabTarget.mesh,
+                type: 'debris_block',
+                vel: shootDir.multiplyScalar(30), // Súper lanzamiento con fuerza
+                timer: 6.0,
+                radius: 0.8,
+                color: grabTarget.color
+            });
+
+            grabTarget = null;
+        }
+
+        // Colocar Bloques (Simulador estilo Minecraft)
+        function placeBlockInFront(raycaster) {
+            const intersects = raycaster.intersectObjects(blocks.map(b => b.mesh));
+            if (intersects.length > 0 && intersects[0].distance <= 8) {
+                const point = intersects[0].point;
+                const normal = intersects[0].face.normal;
+                
+                // Calcular coordenadas del bloque adyacente según la cara golpeada
+                const size = 1.4;
+                const targetPos = new THREE.Vector3()
+                    .copy(intersects[0].object.position)
+                    .addScaledVector(normal, size);
+                
+                // Generar un color aleatorio brillante estilo Roblox
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444'];
+                const randColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                addVoxelBlock(targetPos.x, targetPos.y, targetPos.z, randColor, size, 30);
+                playSound('jump');
+                triggerNotification("🧱 Bloque colocado");
+            }
+        }
+
+        // --- SISTEMA FÍSICO DE PARTÍCULAS SÚPER SATISFACTORIAS ---
+
+        function spawnImpactParticles(pos, colorHex, count = 12) {
+            const geo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+            const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(colorHex) });
+
+            for (let i = 0; i < count; i++) {
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(pos);
+                // Distribución aleatoria de velocidad
+                mesh.position.x += (Math.random() - 0.5) * 0.4;
+                mesh.position.y += (Math.random() - 0.5) * 0.4;
+                mesh.position.z += (Math.random() - 0.5) * 0.4;
+                
+                scene.add(mesh);
+
+                particleSystem.push({
+                    mesh: mesh,
+                    vel: new THREE.Vector3(
+                        (Math.random() - 0.5) * 8,
+                        (Math.random() * 5) + 3, // Siempre salta un poco hacia arriba
+                        (Math.random() - 0.5) * 8
+                    ),
+                    life: 1.0 // 1 segundo de vida útil
+                });
+            }
+        }
+
+        // Detonaciones en cadena (Efecto colateral de Plasma y TNT)
+        function triggerAreaExplosion(centerPos, radius) {
+            playSound('explosion');
+            
+            // Generar destello visual
+            spawnImpactParticles(centerPos, '#ff9900', 35);
+            spawnImpactParticles(centerPos, '#ef4444', 20);
+
+            // 1. Afectar bloques en el radio
+            blocks.forEach((block, idx) => {
+                const dist = block.mesh.position.distanceTo(centerPos);
+                if (dist <= radius && block.breakable) {
+                    const dmg = Math.floor((1 - (dist / radius)) * 80);
+                    block.health -= dmg;
+                    
+                    if (block.health <= 0) {
+                        // El bloque se rompe y vuela como residuo físico
+                        setTimeout(() => {
+                            spawnImpactParticles(block.mesh.position, block.color, 12);
+                            scene.remove(block.mesh);
+                        }, idx * 15); // Desfase temporal ligero para mayor realismo estético
+                        
+                        blocks = blocks.filter(b => b !== block);
+                        blocksBrokenInMap++;
+                        activeScore += 10;
+                    }
+                }
+            });
+
+            // 2. Empujar Dummies y dañarlos
+            dynamicEntities.forEach(dum => {
+                const dist = dum.group.position.distanceTo(centerPos);
+                if (dist <= radius) {
+                    const dmg = Math.floor((1 - (dist / radius)) * 60);
+                    dum.health -= dmg;
+                    
+                    const pushDir = new THREE.Vector3().subVectors(dum.group.position, centerPos).normalize();
+                    dum.group.position.addScaledVector(pushDir, 3.5);
+                    
+                    if (dum.health <= 0) {
+                        activeScore += 50;
+                        spawnImpactParticles(dum.group.position, '#ef4444', 25);
+                        scene.remove(dum.group);
+                        dynamicEntities = dynamicEntities.filter(d => d !== dum);
+                    }
+                }
+            });
+
+            // 3. Dañar al propio jugador si está muy cerca (Inmersión)
+            const playerDist = player.pos.distanceTo(centerPos);
+            if (playerDist <= radius) {
+                const selfDmg = (1 - (playerDist / radius)) * 35;
+                activeHealth -= selfDmg;
+                playSound('hurt');
+                triggerNotification(`💥 ¡Te hirió la onda expansiva!`);
+                
+                // Empuje al jugador
+                const pushDir = new THREE.Vector3().subVectors(player.pos, centerPos).normalize();
+                player.vel.addScaledVector(pushDir, 6);
+                
+                if (activeHealth <= 0) {
+                    triggerDeath("Fuiste alcanzado por tu propia explosión devastadora.");
+                }
+            }
+
+            updateHUD();
+        }
+
+        // --- BUCLE PRINCIPAL DE ACTUALIZACIÓN (GAME LOOP) ---
+
+        function animate() {
+            if (!isGameRunning) return;
+            requestAnimationFrame(animate);
+
+            const dt = Math.min(clock.getDelta(), 0.1); // Evitar saltos de cuadro exagerados
+
+            // 1. ROTACIÓN DE CÁMARA (Mirada del jugador)
+            camera.rotation.order = "YXZ";
+            camera.rotation.y = mouseLookX;
+            camera.rotation.x = mouseLookY;
+
+            // 2. FÍSICAS Y MOVIMIENTO DEL JUGADOR
+            updatePlayerPhysics(dt);
+
+            // 3. ACTUALIZAR ENTIDADES DINÁMICAS (Dummies hostiles)
+            updateDummies(dt);
+
+            // 4. ACTUALIZAR PROYECTILES Y OBJETOS CON GRAVEDAD
+            updatePhysicsObjects(dt);
+
+            // 5. EFECTOS ESPECIALES Y PARTÍCULAS
+            updateParticles(dt);
+
+            // 6. SISTEMAS DE SOPORTE PARA SELECCIÓN (Pistola de gravedad)
+            updateGravityGunHold();
+
+            // 7. COMPROBACIÓN DE CONDICIONES ESPECIALES (Obby y portal)
+            checkObbyMapConditions();
+
+            renderer.render(scene, camera);
+        }
+
+        // Físicas de movimiento del jugador y colisiones AABB básicas
+        function updatePlayerPhysics(dt) {
+            // Determinar dirección de movimiento según entradas de teclas o joystick táctil
+            let moveX = 0;
+            let moveZ = 0;
+
+            if (isMobileDevice && touchJoystick.active) {
+                moveX = touchJoystick.dirX;
+                moveZ = touchJoystick.dirY;
+            } else {
+                if (keys['KeyW']) moveZ = -1;
+                if (keys['KeyS']) moveZ = 1;
+                if (keys['KeyA']) moveX = -1;
+                if (keys['KeyD']) moveX = 1;
+            }
+
+            // Normalizar dirección
+            const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();
+            
+            // Alinear dirección de movimiento con la rotación de la cámara (plana)
+            const camEuler = new THREE.Euler(0, mouseLookX, 0, 'YXZ');
+            moveDir.applyEuler(camEuler);
+
+            // Velocidad objetivo
+            const targetVelX = moveDir.x * player.speed;
+            const targetVelZ = moveDir.z * player.speed;
+
+            // Suavizado de inercia
+            player.vel.x += (targetVelX - player.vel.x) * 12 * dt;
+            player.vel.z += (targetVelZ - player.vel.z) * 12 * dt;
+
+            // Gravedad
+            player.vel.y -= 22 * dt; // Aceleración de gravedad realista
+
+            // Guardar posición anterior para resolver colisiones
+            const prevPos = player.pos.clone();
+
+            // Mover en eje Y
+            player.pos.y += player.vel.y * dt;
+            resolvePlayerCollisions('y');
+
+            // Mover en ejes X y Z
+            player.pos.x += player.vel.x * dt;
+            player.pos.z += player.vel.z * dt;
+            resolvePlayerCollisions('xz');
+
+            // Actualizar posición de la cámara (ojos del personaje)
+            camera.position.copy(player.pos);
+
+            // Caer fuera del mapa (Muerte por vacío)
+            if (player.pos.y < -15) {
+                if (selectedMapType === 'obby') {
+                    triggerDeath("Caíste a la lava hirviente.");
+                } else {
+                    player.pos.set(0, 5, 0);
+                    player.vel.set(0, 0, 0);
+                    triggerNotification("Resurgiendo en el mapa...");
+                }
+            }
+        }
+
+        // Resolución rápida de colisiones mediante cajas de contención
+        function resolvePlayerCollisions(axis) {
+            // Generar bounding box temporal para el jugador
+            const pBox = new THREE.Box3(
+                new THREE.Vector3(player.pos.x - 0.6, player.pos.y - 1.8, player.pos.z - 0.6),
+                new THREE.Vector3(player.pos.x + 0.6, player.pos.y + 0.4, player.pos.z + 0.6)
+            );
+
+            player.onGround = false;
+
+            for (let i = 0; i < blocks.length; i++) {
+                const b = blocks[i];
+                if (pBox.intersectsBox(b.box)) {
+                    // Colisión detectada con bloque
+                    if (b.isLava) {
+                        activeHealth -= 1.2; // Daño constante por lava
+                        playSound('hurt');
+                        updateHUD();
+                        if (activeHealth <= 0) {
+                            triggerDeath("Te carbonizaste en la lava ardiente.");
+                            return;
+                        }
+                    }
+
+                    if (axis === 'y') {
+                        if (player.vel.y < 0) { // Cayendo
+                            player.pos.y = b.box.max.y + 1.8;
+                            player.vel.y = 0;
+                            player.onGround = true;
+                        } else if (player.vel.y > 0) { // Golpeando techo
+                            player.pos.y = b.box.min.y - 0.4;
+                            player.vel.y = 0;
+                        }
+                    } else if (axis === 'xz') {
+                        // Empujar hacia atrás según la penetración
+                        const overlapX = Math.min(pBox.max.x - b.box.min.x, b.box.max.x - pBox.min.x);
+                        const overlapZ = Math.min(pBox.max.z - b.box.min.z, b.box.max.z - pBox.min.z);
+
+                        if (overlapX < overlapZ) {
+                            if (player.pos.x < b.mesh.position.x) {
+                                player.pos.x -= overlapX;
+                            } else {
+                                player.pos.x += overlapX;
+                            }
+                            player.vel.x = 0;
+                        } else {
+                            if (player.pos.z < b.mesh.position.z) {
+                                player.pos.z -= overlapZ;
+                            } else {
+                                player.pos.z += overlapZ;
+                            }
+                            player.vel.z = 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // IA Básica de Dummies que persiguen o se tambalean
+        function updateDummies(dt) {
+            dynamicEntities.forEach(dum => {
+                dum.wobbleOffset += dt * 6;
+                
+                // Efecto wobble (animación de balanceo estilo Roblox)
+                dum.group.rotation.z = Math.sin(dum.wobbleOffset) * 0.12;
+                dum.group.rotation.x = Math.cos(dum.wobbleOffset) * 0.05;
+
+                if (dum.isHostile) {
+                    // Moverse hacia el jugador
+                    const dir = new THREE.Vector3().subVectors(player.pos, dum.group.position);
+                    dir.y = 0; // Mantener plano horizontal
+                    const dist = dir.length();
+                    
+                    if (dist < 15 && dist > 1.4) {
+                        dir.normalize();
+                        dum.group.position.addScaledVector(dir, dum.speed * dt);
+                        // Rotar mirando al jugador
+                        const angle = Math.atan2(dir.x, dir.z);
+                        dum.group.rotation.y = angle;
+                    }
+
+                    // Atacar al jugador si está lo suficientemente cerca
+                    if (dist <= 1.8) {
+                        if (dum.cooldown <= 0) {
+                            activeHealth -= 15;
+                            playSound('hurt');
+                            updateHUD();
+                            dum.cooldown = 1.2; // Segundos entre golpes
+                            triggerNotification("💥 ¡Un Dummy te golpeó!");
+                            
+                            // Empuje de impacto
+                            const push = new THREE.Vector3().subVectors(player.pos, dum.group.position).normalize();
+                            player.vel.addScaledVector(push, 8);
+
+                            if (activeHealth <= 0) {
+                                triggerDeath("Fuiste derrotado por los Dummies de prueba.");
+                            }
+                        }
+                    }
+                }
+
+                if (dum.cooldown > 0) {
+                    dum.cooldown -= dt;
+                }
+            });
+        }
+
+        // Proyectiles y colisiones con físicas simplificadas
+        function updatePhysicsObjects(dt) {
+            physicsObjects.forEach(obj => {
+                // Aplicar gravedad moderada si es dinamita o bloque suelto
+                if (obj.type === 'tnt' || obj.type === 'debris_block') {
+                    obj.vel.y -= 10 * dt;
+                }
+
+                // Desplazamiento
+                obj.mesh.position.addScaledVector(obj.vel, dt);
+                obj.timer -= dt;
+
+                // Rotación estética para proyectiles
+                obj.mesh.rotation.x += 2 * dt;
+                obj.mesh.rotation.y += 2 * dt;
+
+                // Comprobar colisiones contra bloques estáticos del mapa
+                const objBox = new THREE.Box3().setFromObject(obj.mesh);
+                let hitMap = false;
+
+                for (let i = 0; i < blocks.length; i++) {
+                    const b = blocks[i];
+                    if (objBox.intersectsBox(b.box)) {
+                        hitMap = true;
+                        break;
+                    }
+                }
+
+                // Procesamiento de impactos o detonación final
+                if (obj.type === 'plasma') {
+                    // Colisionar también contra Dummies
+                    dynamicEntities.forEach(dum => {
+                        if (obj.mesh.position.distanceTo(dum.group.position) < 1.8) {
+                            hitMap = true;
+                        }
+                    });
+
+                    if (hitMap || obj.timer <= 0) {
+                        // Impacto de plasma directo (explosión mediana)
+                        triggerAreaExplosion(obj.mesh.position, 5.0);
+                        scene.remove(obj.mesh);
+                        physicsObjects = physicsObjects.filter(o => o !== obj);
+                    }
+                } else if (obj.type === 'tnt') {
+                    if (obj.timer <= 0) {
+                        // Explosión destructiva gigantesca
+                        triggerAreaExplosion(obj.mesh.position, 8.5);
+                        scene.remove(obj.mesh);
+                        physicsObjects = physicsObjects.filter(o => o !== obj);
+                    }
+                } else if (obj.type === 'debris_block') {
+                    // Rebotar ligeramente en las paredes/suelo al impactar
+                    if (hitMap) {
+                        obj.vel.y = Math.abs(obj.vel.y) * 0.4; // Rebote vertical
+                        obj.vel.x *= -0.3;
+                        obj.vel.z *= -0.3;
+                    }
+                    if (obj.timer <= 0) {
+                        scene.remove(obj.mesh);
+                        physicsObjects = physicsObjects.filter(o => o !== obj);
+                    }
+                }
+            });
+        }
+
+        // Actualización de partículas visuales
+        function updateParticles(dt) {
+            particleSystem.forEach(p => {
+                p.vel.y -= 9.8 * dt; // Caída por gravedad de las partículas
+                p.mesh.position.addScaledVector(p.vel, dt);
+                p.life -= dt;
+
+                // Achicar partícula conforme muere
+                p.mesh.scale.setScalar(p.life);
+
+                if (p.life <= 0) {
+                    scene.remove(p.mesh);
+                    particleSystem = particleSystem.filter(item => item !== p);
+                }
+            });
+        }
+
+        // Pistola de gravedad: Sujeta y arrastra el bloque capturado en el aire
+        function updateGravityGunHold() {
+            if (!grabTarget) return;
+
+            // Calcular posición ideal de retención delante de la mirada del jugador
+            const holdPos = new THREE.Vector3();
+            const lookDir = new THREE.Vector3();
+            camera.getWorldDirection(lookDir);
+
+            holdPos.copy(player.pos).addScaledVector(lookDir, grabDistance);
+            
+            // Mover suavemente el bloque hacia esa posición utilizando lerp
+            grabTarget.mesh.position.lerp(holdPos, 0.2);
+            grabTarget.box.setFromObject(grabTarget.mesh); // Actualizar colisiones
+        }
+
+        // Monitoreo del Obby (Roblox Obby)
+        function checkObbyMapConditions() {
+            if (selectedMapType !== 'obby' || !portalEntity) return;
+
+            // Rotar el portal
+            portalEntity.rotation.z += 0.015;
+
+            // Distancia del jugador al portal dorado
+            const dist = player.pos.distanceTo(portalEntity.position);
+            if (dist < 2.5) {
+                triggerVictory();
+            }
+        }
+
+        // Iniciar el sistema completo al cargar la página
+        window.onload = function() {
+            selectMap('destruction'); // Por defecto seleccionado
+        }
+    </script>
+</body>
+</html>
